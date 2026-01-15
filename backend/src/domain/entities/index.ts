@@ -24,6 +24,7 @@ export * from './cart.entity';
 // Order
 export * from './order-item-option.entity';
 export * from './order-item.entity';
+export * from './order.entity';
 
 // Coupon & Review
 export * from './coupon.entity';

@@ -11,7 +11,7 @@ import { CartItem } from './cart-item.entity';
 import { Restaurant } from './restaurant.entity';
 import { User } from './user.entity';
 
-export type DeliveryType = 'delivery' | 'collection';
+type DeliveryType = 'delivery' | 'collection';
 
 @Entity('carts')
 export class Cart extends Auditable {
