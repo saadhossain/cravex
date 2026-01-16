@@ -1,7 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Filter,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
@@ -78,6 +86,8 @@ const allStatuses: OrderStatus[] = [
   "failed",
 ];
 
+const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
+
 export function RecentOrdersTable({
   orders,
   isLoading,
@@ -92,6 +102,10 @@ export function RecentOrdersTable({
   const [amountSort, setAmountSort] = useState<SortDirection>(null);
   const [statusSort, setStatusSort] = useState<SortDirection>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
   const handlePeriodChange = (period: TimePeriod) => {
     setSelectedPeriod(period);
     setIsPeriodOpen(false);
@@ -103,11 +117,13 @@ export function RecentOrdersTable({
       ? selectedStatuses.filter((s) => s !== status)
       : [...selectedStatuses, status];
     setSelectedStatuses(newStatuses);
+    setCurrentPage(1); // Reset to first page when filtering
     onStatusFilter?.(newStatuses);
   };
 
   const clearStatusFilter = () => {
     setSelectedStatuses([]);
+    setCurrentPage(1);
     onStatusFilter?.([]);
   };
 
@@ -128,7 +144,7 @@ export function RecentOrdersTable({
   };
 
   // Filter and sort orders locally for demo
-  const processedOrders = useMemo(() => {
+  const filteredAndSortedOrders = useMemo(() => {
     let result = [...orders];
 
     // Filter by status
@@ -153,6 +169,23 @@ export function RecentOrdersTable({
 
     return result;
   }, [orders, selectedStatuses, amountSort, statusSort]);
+
+  // Calculate pagination
+  const totalItems = filteredAndSortedOrders.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedOrders = filteredAndSortedOrders.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   if (isLoading) {
     return (
@@ -181,8 +214,9 @@ export function RecentOrdersTable({
             Recent Order Details
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {processedOrders.length} orders
+            {totalItems} orders
             {selectedStatuses.length > 0 && " (filtered)"}
+            {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -370,7 +404,7 @@ export function RecentOrdersTable({
             </tr>
           </thead>
           <tbody>
-            {processedOrders.length === 0 ? (
+            {paginatedOrders.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -380,7 +414,7 @@ export function RecentOrdersTable({
                 </td>
               </tr>
             ) : (
-              processedOrders.map((order) => (
+              paginatedOrders.map((order) => (
                 <tr
                   key={order.id}
                   className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
@@ -453,6 +487,127 @@ export function RecentOrdersTable({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalItems > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 pt-4 border-t border-border">
+          {/* Items per page selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Show:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+              className="px-2 py-1 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+            >
+              {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm text-muted-foreground">
+              of {totalItems} orders
+            </span>
+          </div>
+
+          {/* Page navigation */}
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              {/* First page */}
+              <button
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+                className={cn(
+                  "p-2 rounded-lg border transition-colors",
+                  currentPage === 1
+                    ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                    : "border-border hover:bg-accent hover:border-primary/30"
+                )}
+                aria-label="First page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 -ml-3" />
+              </button>
+
+              {/* Previous page */}
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={cn(
+                  "p-2 rounded-lg border transition-colors",
+                  currentPage === 1
+                    ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                    : "border-border hover:bg-accent hover:border-primary/30"
+                )}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum)}
+                      className={cn(
+                        "w-8 h-8 text-sm rounded-lg border transition-colors",
+                        currentPage === pageNum
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border hover:bg-accent hover:border-primary/30"
+                      )}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Next page */}
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={cn(
+                  "p-2 rounded-lg border transition-colors",
+                  currentPage === totalPages
+                    ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                    : "border-border hover:bg-accent hover:border-primary/30"
+                )}
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              {/* Last page */}
+              <button
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className={cn(
+                  "p-2 rounded-lg border transition-colors",
+                  currentPage === totalPages
+                    ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                    : "border-border hover:bg-accent hover:border-primary/30"
+                )}
+                aria-label="Last page"
+              >
+                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 -ml-3" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
