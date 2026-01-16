@@ -1,5 +1,8 @@
 import { apiSlice } from "./apiSlice";
 
+// Time period type
+export type TimePeriod = "daily" | "weekly" | "monthly";
+
 // Dashboard types
 export interface OrdersByStatus {
   pending: number;
@@ -26,6 +29,8 @@ export interface RecentOrder {
   customerName: string;
   deliveryType: string;
   createdAt: string;
+  image?: string;
+  title?: string;
 }
 
 export interface DashboardStats {
@@ -38,6 +43,24 @@ export interface DashboardStats {
   ordersByStatus: OrdersByStatus;
   revenueByDay: RevenueByDay[];
   recentOrders: RecentOrder[];
+}
+
+export interface TopSellingDish {
+  id: string;
+  name: string;
+  image?: string;
+  price: number;
+  orderCount: number;
+  orderRate: number;
+  isPositive: boolean;
+}
+
+export interface TopSellingDishesResponse {
+  dishes: TopSellingDish[];
+  overallRate: {
+    value: number;
+    isPositive: boolean;
+  };
 }
 
 export interface AdminOrder {
@@ -86,10 +109,27 @@ export interface RestaurantOption {
   name: string;
 }
 
+export interface PeriodQuery {
+  period?: TimePeriod;
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getDashboardStats: builder.query<DashboardStats, void>({
-      query: () => "/admin/dashboard/stats",
+    getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
+      query: (params) => ({
+        url: "/admin/dashboard/stats",
+        params: params || undefined,
+      }),
+      providesTags: ["Order"],
+    }),
+    getTopSellingDishes: builder.query<
+      TopSellingDishesResponse,
+      PeriodQuery | void
+    >({
+      query: (params) => ({
+        url: "/admin/dashboard/top-selling-dishes",
+        params: params || undefined,
+      }),
       providesTags: ["Order"],
     }),
     getAdminOrders: builder.query<AdminOrdersResponse, AdminOrdersQuery>({
@@ -108,6 +148,7 @@ export const adminApi = apiSlice.injectEndpoints({
 
 export const {
   useGetDashboardStatsQuery,
+  useGetTopSellingDishesQuery,
   useGetAdminOrdersQuery,
   useGetRestaurantsForFilterQuery,
 } = adminApi;

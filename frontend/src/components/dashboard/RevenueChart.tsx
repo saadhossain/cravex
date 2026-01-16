@@ -1,7 +1,8 @@
 "use client";
 
-import { RevenueByDay } from "@/store/api/adminApi";
+import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import {
   Bar,
@@ -15,14 +16,37 @@ import {
   YAxis,
 } from "recharts";
 
+export type TimePeriod = "daily" | "weekly" | "monthly";
+
+export interface RevenueByDay {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
 interface RevenueChartProps {
   data: RevenueByDay[];
+  onPeriodChange?: (period: TimePeriod) => void;
 }
 
 type ChartType = "line" | "bar";
 
-export function RevenueChart({ data }: RevenueChartProps) {
+const periodLabels: Record<TimePeriod, string> = {
+  daily: "Last 24h",
+  weekly: "Last 7 Days",
+  monthly: "Last 30 Days",
+};
+
+export function RevenueChart({ data, onPeriodChange }: RevenueChartProps) {
   const [chartType, setChartType] = useState<ChartType>("line");
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("weekly");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handlePeriodChange = (period: TimePeriod) => {
+    setSelectedPeriod(period);
+    setIsOpen(false);
+    onPeriodChange?.(period);
+  };
 
   const formattedData = data.map((item) => ({
     ...item,
@@ -34,47 +58,87 @@ export function RevenueChart({ data }: RevenueChartProps) {
   const totalOrders = data.reduce((sum, item) => sum + item.orders, 0);
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <div className="bg-card border border-border rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-white">Revenue Trend</h3>
-          <p className="text-sm text-gray-400 mt-1">Last 7 days</p>
+          <h3 className="text-lg font-semibold text-foreground">
+            Revenue Trend
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {periodLabels[selectedPeriod]}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setChartType("line")}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              chartType === "line"
-                ? "bg-orange-500 text-white"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-            }`}
-          >
-            Line
-          </button>
-          <button
-            onClick={() => setChartType("bar")}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              chartType === "bar"
-                ? "bg-orange-500 text-white"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-            }`}
-          >
-            Bar
-          </button>
+        <div className="flex items-center gap-2">
+          {/* Period Filter */}
+          <div className="relative">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
+            >
+              {periodLabels[selectedPeriod]}
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {isOpen && (
+              <div className="absolute right-0 top-full mt-1 z-10 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px]">
+                {(Object.keys(periodLabels) as TimePeriod[]).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => handlePeriodChange(period)}
+                    className={cn(
+                      "w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors",
+                      selectedPeriod === period
+                        ? "text-primary bg-primary/5"
+                        : "text-popover-foreground"
+                    )}
+                  >
+                    {periodLabels[period]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Chart Type Toggle */}
+          <div className="flex gap-1 bg-secondary rounded-lg p-1">
+            <button
+              onClick={() => setChartType("line")}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                chartType === "line"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Line
+            </button>
+            <button
+              onClick={() => setChartType("bar")}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                chartType === "bar"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Bar
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <p className="text-sm text-gray-400">Total Revenue</p>
-          <p className="text-2xl font-bold text-white mt-1">
+        <div className="bg-secondary/50 rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">Total Revenue</p>
+          <p className="text-2xl font-bold text-foreground mt-1">
             £
             {totalRevenue.toLocaleString("en-GB", { minimumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <p className="text-sm text-gray-400">Total Orders</p>
-          <p className="text-2xl font-bold text-white mt-1">{totalOrders}</p>
+        <div className="bg-secondary/50 rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">Total Orders</p>
+          <p className="text-2xl font-bold text-foreground mt-1">
+            {totalOrders}
+          </p>
         </div>
       </div>
 
@@ -82,25 +146,28 @@ export function RevenueChart({ data }: RevenueChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           {chartType === "line" ? (
             <LineChart data={formattedData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+              />
               <XAxis
                 dataKey="date"
-                stroke="#9ca3af"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
               />
               <YAxis
-                stroke="#9ca3af"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
                 tickFormatter={(value) => `£${value}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
+                  backgroundColor: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
-                  color: "#fff",
+                  color: "hsl(var(--popover-foreground))",
                 }}
                 formatter={(value: number | undefined) => {
                   if (value === undefined) return ["N/A", "Revenue"];
@@ -121,33 +188,36 @@ export function RevenueChart({ data }: RevenueChartProps) {
               <Line
                 type="monotone"
                 dataKey="revenue"
-                stroke="#f97316"
+                stroke="hsl(var(--primary))"
                 strokeWidth={3}
-                dot={{ fill: "#f97316", strokeWidth: 2 }}
-                activeDot={{ r: 6, fill: "#f97316" }}
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
               />
             </LineChart>
           ) : (
             <BarChart data={formattedData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+              />
               <XAxis
                 dataKey="date"
-                stroke="#9ca3af"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
               />
               <YAxis
-                stroke="#9ca3af"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
                 tickFormatter={(value) => `£${value}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
+                  backgroundColor: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
-                  color: "#fff",
+                  color: "hsl(var(--popover-foreground))",
                 }}
                 formatter={(value: number | undefined) => {
                   if (value === undefined) return ["N/A", "Revenue"];
@@ -159,7 +229,11 @@ export function RevenueChart({ data }: RevenueChartProps) {
                   ];
                 }}
               />
-              <Bar dataKey="revenue" fill="#f97316" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="revenue"
+                fill="hsl(var(--primary))"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           )}
         </ResponsiveContainer>

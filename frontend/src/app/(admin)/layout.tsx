@@ -1,5 +1,7 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme";
+import { UserMenu } from "@/components/ui/UserMenu";
 import { Separator } from "@radix-ui/react-separator";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,14 +22,14 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-gray-900 border-r border-gray-800">
-        <div className="flex h-16 items-center px-6 border-b border-gray-800">
+      <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-card border-r border-border">
+        <div className="flex h-16 items-center px-6 border-b border-border">
           <Link href="/dashboard" className="flex items-center gap-2">
             <span className="text-2xl">🍕</span>
-            <span className="text-xl font-bold text-white">Cravex</span>
-            <span className="text-xs text-orange-500 font-medium px-2 py-0.5 bg-orange-500/10 rounded">
+            <span className="text-xl font-bold text-foreground">Cravex</span>
+            <span className="text-xs text-primary font-medium px-2 py-0.5 bg-primary/10 rounded">
               Admin
             </span>
           </Link>
@@ -41,8 +43,8 @@ export default function AdminLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-orange-500/10 text-orange-500"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
                 <span className="text-lg">{item.icon}</span>
@@ -51,11 +53,11 @@ export default function AdminLayout({
             );
           })}
         </nav>
-        <Separator className="my-4 bg-gray-800" />
+        <Separator className="my-4 bg-border" />
         <div className="px-4">
           <Link
             href="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <span className="text-lg">🏠</span>
             Back to Home
@@ -65,15 +67,13 @@ export default function AdminLayout({
 
       {/* Main content */}
       <main className="ml-64 flex-1">
-        <header className="h-16 border-b border-gray-800 bg-gray-900 flex items-center justify-between px-6">
-          <h1 className="text-lg font-semibold text-white">
+        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
+          <h1 className="text-lg font-semibold text-foreground">
             Super Admin Panel
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">Welcome, Admin</span>
-            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              A
-            </div>
+            <ThemeToggle />
+            <UserMenu />
           </div>
         </header>
         <div className="p-6">{children}</div>
