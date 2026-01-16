@@ -52,9 +52,6 @@ export function UserMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground hidden sm:block">
-          Welcome, {getUserName()}
-        </span>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"

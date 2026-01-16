@@ -124,22 +124,9 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome back! Here&apos;s your business overview.
-          </p>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Last updated: {new Date().toLocaleTimeString()}
-        </div>
-      </div>
-
-      {/* Stats Cards Carousel */}
-      <StatsCardCarousel>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Stats Cards Carousel - with title that includes nav arrows */}
+      <StatsCardCarousel title="Overview Stats">
         <StatsCardSlide>
           <StatsCard
             title="Total Orders"
@@ -148,6 +135,28 @@ export default function AdminDashboardPage() {
             icon={ShoppingCart}
             variant="default"
             trend={trends.totalOrders}
+            showFilter
+          />
+        </StatsCardSlide>
+        <StatsCardSlide>
+          <StatsCard
+            title="Pending Orders"
+            value={stats.pendingOrders}
+            subtitle="Need attention"
+            icon={Package}
+            variant="warning"
+            trend={trends.pendingOrders}
+            showFilter
+          />
+        </StatsCardSlide>
+        <StatsCardSlide>
+          <StatsCard
+            title="Avg. Order Value"
+            value={`£${stats.averageOrderValue.toFixed(2)}`}
+            subtitle="Per order"
+            icon={TrendingUp}
+            variant="success"
+            trend={trends.avgOrderValue}
             showFilter
           />
         </StatsCardSlide>
@@ -186,40 +195,27 @@ export default function AdminDashboardPage() {
             showFilter
           />
         </StatsCardSlide>
-        <StatsCardSlide>
-          <StatsCard
-            title="Pending Orders"
-            value={stats.pendingOrders}
-            subtitle="Need attention"
-            icon={Package}
-            variant="warning"
-            trend={trends.pendingOrders}
-            showFilter
-          />
-        </StatsCardSlide>
-        <StatsCardSlide>
-          <StatsCard
-            title="Avg. Order Value"
-            value={`£${stats.averageOrderValue.toFixed(2)}`}
-            subtitle="Per order"
-            icon={TrendingUp}
-            variant="success"
-            trend={trends.avgOrderValue}
-            showFilter
-          />
-        </StatsCardSlide>
       </StatsCardCarousel>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <OrderStatusChart data={stats.ordersByStatus} />
-        <RevenueChart data={stats.revenueByDay} />
+      {/* Charts Row - Equal Width (w-1/2 each on large screens) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="w-full">
+          <OrderStatusChart data={stats.ordersByStatus} />
+        </div>
+        <div className="w-full">
+          <RevenueChart data={stats.revenueByDay} />
+        </div>
       </div>
 
-      {/* Top Selling Dishes & Recent Orders */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Top Selling Dishes */}
-        <div className="xl:col-span-1">
+      {/* Recent Orders (8 cols) & Top Selling Dishes (4 cols) - Swapped positions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+        {/* Recent Orders - Left, 8 columns */}
+        <div className="lg:col-span-8 order-2 lg:order-1">
+          <RecentOrdersTable orders={stats.recentOrders} />
+        </div>
+
+        {/* Top Selling Dishes - Right, 4 columns */}
+        <div className="lg:col-span-4 order-1 lg:order-2">
           <TopSellingDishes
             dishes={topDishesData?.dishes || []}
             overallRate={
@@ -227,11 +223,6 @@ export default function AdminDashboardPage() {
             }
             isLoading={topDishesLoading}
           />
-        </div>
-
-        {/* Recent Orders */}
-        <div className="xl:col-span-2">
-          <RecentOrdersTable orders={stats.recentOrders} />
         </div>
       </div>
 

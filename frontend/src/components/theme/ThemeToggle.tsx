@@ -41,27 +41,13 @@ export function ThemeToggle() {
     }
   };
 
-  const getLabel = () => {
-    switch (theme) {
-      case "dark":
-        return "Dark";
-      case "light":
-        return "Light";
-      default:
-        return "System";
-    }
-  };
-
   return (
     <button
       onClick={cycleTheme}
       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border hover:bg-accent transition-colors"
-      title={`Current: ${getLabel()}. Click to change.`}
+      title="Click to change"
     >
       <span className="text-foreground">{getIcon()}</span>
-      <span className="text-sm text-muted-foreground hidden sm:inline">
-        {getLabel()}
-      </span>
     </button>
   );
 }

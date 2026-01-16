@@ -6,13 +6,15 @@ import { useCallback, useEffect, useState } from "react";
 
 interface StatsCardCarouselProps {
   children: React.ReactNode;
+  title?: string;
 }
 
-export function StatsCardCarousel({ children }: StatsCardCarouselProps) {
+export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
     dragFree: true,
+    skipSnaps: false,
   });
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -56,53 +58,69 @@ export function StatsCardCarousel({ children }: StatsCardCarouselProps) {
   }, [emblaApi, onSelect, onScroll]);
 
   return (
-    <div className="relative group">
-      {/* Navigation Buttons */}
-      <button
-        onClick={scrollPrev}
-        disabled={!canScrollPrev}
-        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 p-2 rounded-full bg-card border border-border shadow-lg transition-all duration-200 ${
-          canScrollPrev
-            ? "opacity-0 group-hover:opacity-100 hover:bg-accent"
-            : "opacity-0 cursor-not-allowed"
-        }`}
-        aria-label="Previous"
-      >
-        <ChevronLeft className="w-5 h-5 text-foreground" />
-      </button>
-
-      <button
-        onClick={scrollNext}
-        disabled={!canScrollNext}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 p-2 rounded-full bg-card border border-border shadow-lg transition-all duration-200 ${
-          canScrollNext
-            ? "opacity-0 group-hover:opacity-100 hover:bg-accent"
-            : "opacity-0 cursor-not-allowed"
-        }`}
-        aria-label="Next"
-      >
-        <ChevronRight className="w-5 h-5 text-foreground" />
-      </button>
+    <div className="space-y-4">
+      {/* Header with Navigation Controls - always visible on desktop */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {title && (
+            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          )}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="text-xs sm:text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg">
+              Last updated: {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={scrollPrev}
+            disabled={!canScrollPrev}
+            className={`hidden md:flex items-center justify-center p-2 rounded-lg border transition-all duration-200 ${
+              canScrollPrev
+                ? "bg-card border-border hover:bg-accent hover:border-accent-foreground/20 cursor-pointer"
+                : "bg-muted/30 border-border/50 cursor-not-allowed opacity-50"
+            }`}
+            aria-label="Previous cards"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={scrollNext}
+            disabled={!canScrollNext}
+            className={`hidden md:flex items-center justify-center p-2 rounded-lg border transition-all duration-200 ${
+              canScrollNext
+                ? "bg-card border-border hover:bg-accent hover:border-accent-foreground/20 cursor-pointer"
+                : "bg-muted/30 border-border/50 cursor-not-allowed opacity-50"
+            }`}
+            aria-label="Next cards"
+          >
+            <ChevronRight className="w-5 h-5 text-foreground" />
+          </button>
+        </div>
+      </div>
 
       {/* Carousel Container */}
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-4">{children}</div>
+      <div
+        className="overflow-hidden cursor-grab active:cursor-grabbing"
+        ref={emblaRef}
+      >
+        <div className="flex gap-3 md:gap-4 touch-pan-y">{children}</div>
       </div>
 
       {/* Progress Bar */}
-      <div className="mt-4 h-1 bg-secondary rounded-full overflow-hidden">
+      <div className="h-1.5 bg-secondary/50 rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-150 rounded-full"
+          className="h-full bg-linear-to-r from-primary to-primary/70 transition-all duration-150 rounded-full"
           style={{
             width: `${(1 / 6) * 100 + scrollProgress * (5 / 6) * 100}%`,
           }}
         />
       </div>
 
-      {/* Scroll Hint */}
+      {/* Scroll Hint - only on mobile */}
       {(canScrollPrev || canScrollNext) && (
-        <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
-          ← Swipe or drag to see more stats →
+        <p className="text-xs text-muted-foreground text-center md:hidden opacity-60">
+          ← Swipe to see more →
         </p>
       )}
     </div>
@@ -115,7 +133,7 @@ interface StatsCardSlideProps {
 
 export function StatsCardSlide({ children }: StatsCardSlideProps) {
   return (
-    <div className="flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] lg:w-[calc(25%-12px)] xl:w-[calc(16.666%-13px)]">
+    <div className="flex-shrink-0 w-[85%] min-[480px]:w-[calc(50%-6px)] sm:w-[calc(50%-8px)] md:w-[calc(33.333%-11px)] lg:w-[calc(25%-12px)] xl:w-[calc(16.666%-13.5px)]">
       {children}
     </div>
   );
