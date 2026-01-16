@@ -25,7 +25,7 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-64 fixed left-0 top-0 z-40 h-screen bg-card border-r border-border">
+      <aside className="w-56 fixed left-0 top-0 z-40 h-screen bg-card border-r border-border">
         <div className="flex h-16 items-center px-6 border-b border-border">
           <Link href="/dashboard" className="flex items-center gap-2">
             <span className="text-2xl">🍕</span>
@@ -67,14 +67,14 @@ export default function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 flex-1">
+      <main className="ml-56 flex-1">
         <header className="h-16 border-b border-border bg-card justify-end flex items-center px-6">
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <UserMenu />
           </div>
         </header>
-        <div className="p-6">{children}</div>
+        <div>{children}</div>
       </main>
     </div>
   );
