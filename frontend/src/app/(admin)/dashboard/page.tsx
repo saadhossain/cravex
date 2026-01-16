@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
       {/* Stats Cards Carousel - with title that includes nav arrows */}
       <StatsCardCarousel title="Overview Stats">
         <StatsCardSlide>

@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export type TimePeriod = "daily" | "weekly" | "monthly";
 export type OrderStatus =
@@ -105,6 +105,32 @@ export function RecentOrdersTable({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const periodRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        periodRef.current &&
+        !periodRef.current.contains(event.target as Node)
+      ) {
+        setIsPeriodOpen(false);
+      }
+      if (
+        statusRef.current &&
+        !statusRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handlePeriodChange = (period: TimePeriod) => {
     setSelectedPeriod(period);
@@ -221,7 +247,7 @@ export function RecentOrdersTable({
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Period Filter */}
-          <div className="relative">
+          <div className="relative" ref={periodRef}>
             <button
               onClick={() => setIsPeriodOpen(!isPeriodOpen)}
               className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
@@ -230,7 +256,7 @@ export function RecentOrdersTable({
               <ChevronDown className="w-4 h-4" />
             </button>
             {isPeriodOpen && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[120px]">
+              <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[120px]">
                 {(Object.keys(periodLabels) as TimePeriod[]).map((period) => (
                   <button
                     key={period}
@@ -250,7 +276,7 @@ export function RecentOrdersTable({
           </div>
 
           {/* Status Filter */}
-          <div className="relative">
+          <div className="relative" ref={statusRef}>
             <button
               onClick={() => setIsStatusOpen(!isStatusOpen)}
               className={cn(
@@ -269,7 +295,7 @@ export function RecentOrdersTable({
               )}
             </button>
             {isStatusOpen && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px]">
+              <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px]">
                 <div className="px-3 pb-2 mb-2 border-b border-border flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground">
                     Filter by Status

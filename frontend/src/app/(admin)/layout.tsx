@@ -178,7 +178,7 @@ export default function AdminLayout({
       {/* Main content */}
       <main
         className={cn(
-          "flex-1 transition-all duration-300 ease-in-out",
+          "flex-1 transition-all duration-300 ease-in-out min-w-0",
           mainMargin
         )}
       >
@@ -207,7 +207,7 @@ export default function AdminLayout({
             <UserMenu />
           </div>
         </header>
-        <div>{children}</div>
+        <div className="w-full overflow-x-hidden">{children}</div>
       </main>
     </div>
   );

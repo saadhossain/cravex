@@ -12,11 +12,9 @@ interface StatsCardCarouselProps {
 export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
-    containScroll: "trimSnaps",
+    containScroll: "keepSnaps",
     slidesToScroll: 1,
-    breakpoints: {
-      "(min-width: 768px)": { slidesToScroll: 1 },
-    },
+    loop: false,
   });
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -60,20 +58,20 @@ export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
   }, [emblaApi, onSelect, onScroll]);
 
   return (
-    <div className="space-y-4 overflow-hidden max-w-full">
+    <div className="w-full max-w-full">
       {/* Header with Navigation Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3 min-w-0">
           {title && (
             <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           )}
-          <div className="text-xs sm:text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg">
+          <div className="text-xs sm:text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg whitespace-nowrap">
             Last updated: {new Date().toLocaleTimeString()}
           </div>
         </div>
 
-        {/* Navigation Arrows - Always visible on desktop */}
-        <div className="flex items-center gap-2">
+        {/* Navigation Arrows */}
+        <div className="flex items-center gap-2 ml-4">
           <button
             onClick={scrollPrev}
             disabled={!canScrollPrev}
@@ -101,16 +99,14 @@ export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
         </div>
       </div>
 
-      {/* Carousel Container */}
-      <div
-        className="overflow-hidden cursor-grab active:cursor-grabbing"
-        ref={emblaRef}
-      >
-        <div className="flex gap-4 touch-pan-y">{children}</div>
+      {/* Carousel Viewport - clips overflow */}
+      <div className="overflow-hidden w-full min-w-0" ref={emblaRef}>
+        {/* Carousel Container - holds all slides */}
+        <div className="flex touch-pan-y -ml-4">{children}</div>
       </div>
 
       {/* Progress Bar */}
-      <div className="h-1.5 bg-secondary/50 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-secondary/50 rounded-full overflow-hidden mt-4">
         <div
           className="h-full bg-primary transition-all duration-150 rounded-full"
           style={{
@@ -124,7 +120,7 @@ export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
 
       {/* Scroll Hint - only on mobile */}
       {(canScrollPrev || canScrollNext) && (
-        <p className="text-xs text-muted-foreground text-center md:hidden opacity-60">
+        <p className="text-xs text-muted-foreground text-center md:hidden opacity-60 mt-2">
           ← Swipe to see more →
         </p>
       )}
@@ -137,12 +133,13 @@ interface StatsCardSlideProps {
 }
 
 export function StatsCardSlide({ children }: StatsCardSlideProps) {
-  // Mobile: 1 visible (nearly full width)
-  // Tablet (sm): 2 visible
-  // Desktop (md+): 3 visible
-  // Using calc to account for gaps (gap-4 = 16px)
+  // Embla works with flex-basis for sizing
+  // Mobile: 1 card visible (100%)
+  // Tablet (sm): 2 cards visible (50%)
+  // Desktop (md): 3 cards visible (33.333%)
+  // pl-4 creates the gap between cards
   return (
-    <div className="flex-shrink-0 w-[calc(100%-16px)] sm:w-[calc(50%-8px)] md:w-[calc(18%-11px)]">
+    <div className="min-w-0 shrink-0 grow-0 basis-full sm:basis-1/2 md:basis-1/3 pl-4">
       {children}
     </div>
   );
