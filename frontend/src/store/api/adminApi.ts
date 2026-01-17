@@ -185,6 +185,36 @@ export interface AdminDishesResponse {
   };
 }
 
+export interface AdminUsersQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: "restaurant" | "customer" | "superadmin";
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export interface AdminUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: "restaurant" | "customer" | "superadmin";
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AdminUsersResponse {
+  data: AdminUser[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
@@ -230,6 +260,23 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["Menu"], // Assuming Menu tag exists or should be added
     }),
+    getUsers: builder.query<AdminUsersResponse, AdminUsersQuery>({
+      query: (params) => ({
+        url: "/admin/users",
+        params,
+      }),
+      providesTags: ["User"],
+    }),
+    updateUserStatus: builder.mutation<void, { id: string; isActive: boolean }>(
+      {
+        query: ({ id, isActive }) => ({
+          url: `/admin/users/${id}/status`,
+          method: "PATCH",
+          body: { isActive },
+        }),
+        invalidatesTags: ["User", "Restaurant"],
+      },
+    ),
   }),
 });
 
@@ -240,4 +287,6 @@ export const {
   useGetRestaurantsForFilterQuery,
   useGetRestaurantsQuery,
   useGetDishesQuery,
+  useGetUsersQuery,
+  useUpdateUserStatusMutation,
 } = adminApi;
