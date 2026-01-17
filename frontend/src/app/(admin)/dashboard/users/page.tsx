@@ -152,7 +152,6 @@ export default function UsersPage() {
             { value: "all", label: "All Roles" },
             { value: "customer", label: "Customer" },
             { value: "restaurant", label: "Restaurant" },
-            { value: "superadmin", label: "Super Admin" },
           ]}
           value={role || "all"}
           onChange={(val) => {

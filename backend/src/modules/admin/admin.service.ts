@@ -580,6 +580,10 @@ export class AdminService {
         );
       }
 
+      // Always exclude superadmin from the list
+      // Note: Assuming 'superadmin' is the value in the DB enum
+      queryBuilder.andWhere("user.role != 'superadmin'");
+
       if (role) {
         queryBuilder.andWhere('user.role = :role', { role });
       }
