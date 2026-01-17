@@ -495,8 +495,8 @@ export class AdminService {
 
     const queryBuilder = this.menuItemRepository
       .createQueryBuilder('menuItem')
-      .leftJoinAndSelect('menuItem.restaurant', 'restaurant')
-      .leftJoinAndSelect('menuItem.category', 'category');
+      .leftJoinAndSelect('menuItem.category', 'category')
+      .leftJoinAndSelect('category.restaurant', 'restaurant');
 
     if (search) {
       queryBuilder.andWhere(
@@ -506,7 +506,7 @@ export class AdminService {
     }
 
     if (restaurantId) {
-      queryBuilder.andWhere('menuItem.restaurantId = :restaurantId', {
+      queryBuilder.andWhere('category.restaurantId = :restaurantId', {
         restaurantId,
       });
     }
@@ -534,8 +534,14 @@ export class AdminService {
 
     const [dishes, total] = await queryBuilder.getManyAndCount();
 
+    const mappedDishes = dishes.map((dish) => ({
+      ...dish,
+      restaurant: dish.category?.restaurant,
+      restaurantId: dish.category?.restaurantId,
+    }));
+
     return {
-      data: dishes,
+      data: mappedDishes,
       meta: {
         total,
         page,
