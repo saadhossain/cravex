@@ -63,7 +63,7 @@ export default function AdminLayout({
           // Mobile: hidden by default, shown when menu is open
           isMobileMenuOpen
             ? "translate-x-0"
-            : "-translate-x-full lg:translate-x-0"
+            : "-translate-x-full lg:translate-x-0",
         )}
       >
         {/* Header */}
@@ -72,7 +72,7 @@ export default function AdminLayout({
             href="/dashboard"
             className={cn(
               "flex items-center gap-2 transition-opacity",
-              isCollapsed && "lg:opacity-0 lg:pointer-events-none"
+              isCollapsed && "lg:opacity-0 lg:pointer-events-none",
             )}
           >
             <span className="text-2xl">🍕</span>
@@ -80,9 +80,6 @@ export default function AdminLayout({
               <>
                 <span className="text-xl font-bold text-foreground">
                   Cravex
-                </span>
-                <span className="text-xs text-primary font-medium px-2 py-0.5 bg-primary/10 rounded">
-                  Admin
                 </span>
               </>
             )}
@@ -124,7 +121,7 @@ export default function AdminLayout({
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                  isCollapsed && "lg:justify-center lg:px-0"
+                  isCollapsed && "lg:justify-center lg:px-0",
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
@@ -132,7 +129,7 @@ export default function AdminLayout({
                 <span
                   className={cn(
                     "transition-opacity duration-200",
-                    isCollapsed && "lg:hidden"
+                    isCollapsed && "lg:hidden",
                   )}
                 >
                   {item.label}
@@ -151,7 +148,7 @@ export default function AdminLayout({
             href="/"
             className={cn(
               "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
-              isCollapsed && "lg:justify-center lg:px-0"
+              isCollapsed && "lg:justify-center lg:px-0",
             )}
             title={isCollapsed ? "Back to Home" : undefined}
           >
@@ -159,7 +156,7 @@ export default function AdminLayout({
             <span
               className={cn(
                 "transition-opacity duration-200",
-                isCollapsed && "lg:hidden"
+                isCollapsed && "lg:hidden",
               )}
             >
               Back to Home
@@ -179,7 +176,7 @@ export default function AdminLayout({
       <main
         className={cn(
           "flex-1 transition-all duration-300 ease-in-out min-w-0",
-          mainMargin
+          mainMargin,
         )}
       >
         <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">

@@ -176,20 +176,20 @@ export function RecentOrdersTable({
     // Filter by status
     if (selectedStatuses.length > 0) {
       result = result.filter((order) =>
-        selectedStatuses.includes(order.status as OrderStatus)
+        selectedStatuses.includes(order.status as OrderStatus),
       );
     }
 
     // Sort
     if (amountSort) {
       result.sort((a, b) =>
-        amountSort === "asc" ? a.total - b.total : b.total - a.total
+        amountSort === "asc" ? a.total - b.total : b.total - a.total,
       );
     } else if (statusSort) {
       result.sort((a, b) =>
         statusSort === "asc"
           ? a.status.localeCompare(b.status)
-          : b.status.localeCompare(a.status)
+          : b.status.localeCompare(a.status),
       );
     }
 
@@ -265,7 +265,7 @@ export function RecentOrdersTable({
                       "w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors",
                       selectedPeriod === period
                         ? "text-primary bg-primary/5"
-                        : "text-popover-foreground"
+                        : "text-popover-foreground",
                     )}
                   >
                     {periodLabels[period]}
@@ -283,7 +283,7 @@ export function RecentOrdersTable({
                 "flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors",
                 selectedStatuses.length > 0
                   ? "bg-primary/10 text-primary"
-                  : "bg-secondary text-secondary-foreground hover:bg-accent"
+                  : "bg-secondary text-secondary-foreground hover:bg-accent",
               )}
             >
               <Filter className="w-4 h-4" />
@@ -320,7 +320,7 @@ export function RecentOrdersTable({
                         "w-4 h-4 rounded border flex items-center justify-center",
                         selectedStatuses.includes(status)
                           ? "bg-primary border-primary"
-                          : "border-border"
+                          : "border-border",
                       )}
                     >
                       {selectedStatuses.includes(status) && (
@@ -342,7 +342,7 @@ export function RecentOrdersTable({
                     <span
                       className={cn(
                         "inline-flex px-2 py-0.5 rounded text-xs",
-                        statusStyles[status]
+                        statusStyles[status],
                       )}
                     >
                       {statusLabels[status]}
@@ -373,7 +373,7 @@ export function RecentOrdersTable({
               onClick={() => handleStatusToggle(status)}
               className={cn(
                 "inline-flex items-center gap-1 px-2 py-1 rounded text-xs",
-                statusStyles[status]
+                statusStyles[status],
               )}
             >
               {statusLabels[status]}
@@ -501,7 +501,7 @@ export function RecentOrdersTable({
                       className={cn(
                         "inline-flex px-2.5 py-1 rounded-full text-xs font-medium border",
                         statusStyles[order.status] ||
-                          "bg-muted text-muted-foreground border-border"
+                          "bg-muted text-muted-foreground border-border",
                       )}
                     >
                       {statusLabels[order.status] || order.status}
@@ -544,15 +544,15 @@ export function RecentOrdersTable({
                 onClick={() => goToPage(1)}
                 disabled={currentPage === 1}
                 className={cn(
-                  "p-2 rounded-lg border transition-colors",
+                  "p-2 rounded-lg border transition-colors flex items-center",
                   currentPage === 1
                     ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
-                    : "border-border hover:bg-accent hover:border-primary/30"
+                    : "border-border hover:bg-accent hover:border-primary/30",
                 )}
                 aria-label="First page"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <ChevronLeft className="w-4 h-4 -ml-3" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
 
               {/* Previous page */}
@@ -563,7 +563,7 @@ export function RecentOrdersTable({
                   "p-2 rounded-lg border transition-colors",
                   currentPage === 1
                     ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
-                    : "border-border hover:bg-accent hover:border-primary/30"
+                    : "border-border hover:bg-accent hover:border-primary/30",
                 )}
                 aria-label="Previous page"
               >
@@ -591,7 +591,7 @@ export function RecentOrdersTable({
                         "w-8 h-8 text-sm rounded-lg border transition-colors",
                         currentPage === pageNum
                           ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border hover:bg-accent hover:border-primary/30"
+                          : "border-border hover:bg-accent hover:border-primary/30",
                       )}
                     >
                       {pageNum}
@@ -608,7 +608,7 @@ export function RecentOrdersTable({
                   "p-2 rounded-lg border transition-colors",
                   currentPage === totalPages
                     ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
-                    : "border-border hover:bg-accent hover:border-primary/30"
+                    : "border-border hover:bg-accent hover:border-primary/30",
                 )}
                 aria-label="Next page"
               >
@@ -620,15 +620,15 @@ export function RecentOrdersTable({
                 onClick={() => goToPage(totalPages)}
                 disabled={currentPage === totalPages}
                 className={cn(
-                  "p-2 rounded-lg border transition-colors",
+                  "p-2 rounded-lg border transition-colors flex items-center",
                   currentPage === totalPages
                     ? "border-border/50 text-muted-foreground/50 cursor-not-allowed"
-                    : "border-border hover:bg-accent hover:border-primary/30"
+                    : "border-border hover:bg-accent hover:border-primary/30",
                 )}
                 aria-label="Last page"
               >
                 <ChevronRight className="w-4 h-4" />
-                <ChevronRight className="w-4 h-4 -ml-3" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}

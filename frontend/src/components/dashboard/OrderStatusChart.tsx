@@ -103,7 +103,7 @@ export function OrderStatusChart({
                       "w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors",
                       selectedPeriod === period
                         ? "text-primary bg-primary/5"
-                        : "text-popover-foreground"
+                        : "text-popover-foreground",
                     )}
                   >
                     {periodLabels[period]}
@@ -144,7 +144,7 @@ export function OrderStatusChart({
                     "w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors",
                     selectedPeriod === period
                       ? "text-primary bg-primary/5"
-                      : "text-popover-foreground"
+                      : "text-popover-foreground",
                   )}
                 >
                   {periodLabels[period]}

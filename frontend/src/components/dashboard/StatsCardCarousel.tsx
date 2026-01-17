@@ -66,7 +66,7 @@ export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
             <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           )}
           <div className="text-xs sm:text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg whitespace-nowrap">
-            Last updated: {new Date().toLocaleTimeString()}
+            Last Sync: {new Date().toLocaleTimeString()}
           </div>
         </div>
 
@@ -112,7 +112,7 @@ export function StatsCardCarousel({ children, title }: StatsCardCarouselProps) {
           style={{
             width: `${Math.max(
               20,
-              (1 / 6) * 100 + scrollProgress * (5 / 6) * 100
+              (1 / 6) * 100 + scrollProgress * (5 / 6) * 100,
             )}%`,
           }}
         />

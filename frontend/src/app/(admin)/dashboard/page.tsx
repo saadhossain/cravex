@@ -10,6 +10,7 @@ import {
   TopSellingDishes,
   type TopDish,
 } from "@/components/dashboard";
+import { StatsSummery } from "@/components/dashboard/StatsSummery";
 import {
   useGetDashboardStatsQuery,
   useGetTopSellingDishesQuery,
@@ -201,6 +202,8 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <div className="w-full">
           <OrderStatusChart data={stats.ordersByStatus} />
+          {/* Quick Stats Summary */}
+          <StatsSummery stats={stats} />
         </div>
         <div className="w-full">
           <RevenueChart data={stats.revenueByDay} />
@@ -208,14 +211,14 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent Orders (8 cols) & Top Selling Dishes (4 cols) - Swapped positions */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+      <div className="flex flex-col gap-4 md:gap-6">
         {/* Recent Orders - Left, 8 columns */}
-        <div className="lg:col-span-8 order-2 lg:order-1">
+        <div className="w-full">
           <RecentOrdersTable orders={stats.recentOrders} />
         </div>
 
         {/* Top Selling Dishes - Right, 4 columns */}
-        <div className="lg:col-span-4 order-1 lg:order-2">
+        <div className="w-full">
           <TopSellingDishes
             dishes={topDishesData?.dishes || []}
             overallRate={
@@ -223,45 +226,6 @@ export default function AdminDashboardPage() {
             }
             isLoading={topDishesLoading}
           />
-        </div>
-      </div>
-
-      {/* Quick Stats Summary */}
-      <div className="bg-gradient-to-r from-primary/10 to-warning/10 border border-primary/20 rounded-xl p-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              📊 Business Summary
-            </h3>
-            <p className="text-muted-foreground mt-1">
-              Your platform is performing well with {stats.totalOrders} total
-              orders.
-            </p>
-          </div>
-          <div className="flex gap-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">
-                {(
-                  ((stats.ordersByStatus.delivered || 0) /
-                    Math.max(stats.totalOrders, 1)) *
-                  100
-                ).toFixed(1)}
-                %
-              </p>
-              <p className="text-sm text-muted-foreground">Completion Rate</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-success">
-                {(
-                  ((stats.ordersByStatus.cancelled || 0) /
-                    Math.max(stats.totalOrders, 1)) *
-                  100
-                ).toFixed(1)}
-                %
-              </p>
-              <p className="text-sm text-muted-foreground">Cancellation Rate</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

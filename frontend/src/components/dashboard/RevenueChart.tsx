@@ -88,7 +88,7 @@ export function RevenueChart({ data, onPeriodChange }: RevenueChartProps) {
                       "w-full px-4 py-2 text-sm text-left hover:bg-accent transition-colors",
                       selectedPeriod === period
                         ? "text-primary bg-primary/5"
-                        : "text-popover-foreground"
+                        : "text-popover-foreground",
                     )}
                   >
                     {periodLabels[period]}
@@ -106,7 +106,7 @@ export function RevenueChart({ data, onPeriodChange }: RevenueChartProps) {
                 "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                 chartType === "line"
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Line
@@ -117,7 +117,7 @@ export function RevenueChart({ data, onPeriodChange }: RevenueChartProps) {
                 "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                 chartType === "bar"
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Bar
@@ -142,7 +142,7 @@ export function RevenueChart({ data, onPeriodChange }: RevenueChartProps) {
         </div>
       </div>
 
-      <div className="h-64">
+      <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           {chartType === "line" ? (
             <LineChart data={formattedData}>
