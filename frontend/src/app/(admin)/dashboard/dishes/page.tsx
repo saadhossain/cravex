@@ -51,7 +51,7 @@ export default function DishesPage() {
     ...(restaurantsData?.map((r) => ({ value: r.id, label: r.name })) || []),
   ];
 
-  const { data, isLoading } = useGetDishesQuery({
+  const { data, isLoading, error } = useGetDishesQuery({
     page,
     limit,
     search,
@@ -65,6 +65,12 @@ export default function DishesPage() {
     sortBy,
     sortOrder,
   });
+
+  if (error) {
+    console.error("Error fetching dishes:", error);
+  }
+
+  console.log("Dishes data:", data);
 
   const handleSort = (field: string, direction: "asc" | "desc" | null) => {
     if (!direction) {

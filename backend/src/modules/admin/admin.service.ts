@@ -7,6 +7,7 @@ import { Order } from '../../domain/entities/order.entity';
 import { Restaurant } from '../../domain/entities/restaurant.entity';
 import { User } from '../../domain/entities/user.entity';
 import {
+  AdminDishesQueryDto,
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
   DashboardStatsDto,
@@ -482,6 +483,7 @@ export class AdminService {
   }
 
   async getDishes(query: AdminDishesQueryDto) {
+    console.log('getDishes called with query:', query);
     const {
       page = 1,
       limit = 10,
@@ -533,6 +535,10 @@ export class AdminService {
     queryBuilder.skip(skip).take(limit);
 
     const [dishes, total] = await queryBuilder.getManyAndCount();
+    console.log(`Found ${total} dishes`);
+    if (dishes.length > 0) {
+      console.log('Sample dish category:', dishes[0].category);
+    }
 
     const mappedDishes = dishes.map((dish) => ({
       ...dish,
