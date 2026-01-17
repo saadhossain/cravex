@@ -169,13 +169,6 @@ export default function RestaurantsPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-foreground">Restaurants</h1>
-        <div className="flex gap-2">
-          {/* Can add 'Add Restaurant' button here */}
-        </div>
-      </div>
-
       <div className="flex gap-4 mb-4">
         <input
           placeholder="Search restaurants..."

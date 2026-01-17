@@ -1,6 +1,6 @@
+export { DataTable } from "../common/DataTable";
+export type { ColumnDef, DataTableProps } from "../common/DataTable";
 export * from "./DashboardFilters";
-export { DataTable } from "./DataTable";
-export type { ColumnDef, DataTableProps } from "./DataTable";
 export * from "./Filters";
 export { OrderStatusChart } from "./OrderStatusChart";
 export type { OrdersByStatus } from "./OrderStatusChart";
