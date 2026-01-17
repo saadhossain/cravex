@@ -243,9 +243,9 @@ export function OrdersTable(props: RecentOrdersTableProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6">
+      <div className="bg-card border border-border rounded-xl p-4">
         <h3 className="text-lg font-semibold text-foreground mb-4">
-          Recent Order Details
+          Order Details
         </h3>
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
@@ -265,7 +265,7 @@ export function OrdersTable(props: RecentOrdersTableProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">
-            Recent Order Details
+            Order Details
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">
             {totalItems} orders
@@ -414,20 +414,20 @@ export function OrdersTable(props: RecentOrdersTableProps) {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+      <div className="overflow-auto h-[calc(100vh-320px)] min-h-[400px] relative">
+        <table className="w-full relative">
+          <thead className="sticky top-0 z-20">
+            <tr className="border-b border-border bg-card">
+              <th className="sticky top-0 text-left py-3 px-4 text-sm font-medium text-muted-foreground bg-card z-10">
                 Item
               </th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+              <th className="sticky top-0 text-left py-3 px-4 text-sm font-medium text-muted-foreground bg-card z-10">
                 Customer & Order
               </th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+              <th className="sticky top-0 text-left py-3 px-4 text-sm font-medium text-muted-foreground bg-card z-10">
                 Restaurant
               </th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+              <th className="sticky top-0 text-left py-3 px-4 text-sm font-medium text-muted-foreground bg-card z-10">
                 <button
                   onClick={handleAmountSort}
                   className="flex items-center gap-1 hover:text-foreground transition-colors"
@@ -442,7 +442,7 @@ export function OrdersTable(props: RecentOrdersTableProps) {
                   )}
                 </button>
               </th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+              <th className="sticky top-0 text-left py-3 px-4 text-sm font-medium text-muted-foreground bg-card z-10">
                 <button
                   onClick={handleStatusSort}
                   className="flex items-center gap-1 hover:text-foreground transition-colors"

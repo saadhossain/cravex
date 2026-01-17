@@ -96,7 +96,6 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <h1 className="text-2xl font-bold text-foreground">Orders</h1>
       <OrdersTable
         orders={data?.data || []}
         isLoading={isLoading}
