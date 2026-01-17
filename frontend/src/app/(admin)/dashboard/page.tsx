@@ -2,7 +2,7 @@
 
 import {
   OrderStatusChart,
-  RecentOrdersTable,
+  OrdersTable,
   RevenueChart,
   StatsCard,
   StatsCardCarousel,
@@ -214,7 +214,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col gap-4 md:gap-6">
         {/* Recent Orders - Left, 8 columns */}
         <div className="w-full">
-          <RecentOrdersTable orders={stats.recentOrders} />
+          <OrdersTable orders={stats.recentOrders} />
         </div>
 
         {/* Top Selling Dishes - Right, 4 columns */}

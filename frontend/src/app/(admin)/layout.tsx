@@ -10,11 +10,11 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: "📊" },
-  { label: "Orders", href: "/orders", icon: "📦" },
-  { label: "Restaurants", href: "/restaurants", icon: "🍽️" },
-  { label: "Dishes", href: "/dishes", icon: "🍔" },
-  { label: "Users", href: "/users", icon: "👥" },
-  { label: "Coupons", href: "/coupons", icon: "🎟️" },
+  { label: "Orders", href: "/dashboard/orders", icon: "📦" },
+  { label: "Restaurants", href: "/dashboard/restaurants", icon: "🍽️" },
+  { label: "Dishes", href: "/dashboard/dishes", icon: "🍔" },
+  { label: "Users", href: "/dashboard/users", icon: "👥" },
+  { label: "Coupons", href: "/dashboard/coupons", icon: "🎟️" },
 ];
 
 export default function AdminLayout({

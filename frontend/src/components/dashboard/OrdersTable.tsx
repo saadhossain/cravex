@@ -43,6 +43,12 @@ interface RecentOrdersTableProps {
   onPeriodChange?: (period: TimePeriod) => void;
   onStatusFilter?: (statuses: OrderStatus[]) => void;
   onSortChange?: (field: string, direction: SortDirection) => void;
+  isServerSide?: boolean;
+  totalCount?: number;
+  page?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onItemsPerPageChange?: (items: number) => void;
 }
 
 const statusStyles: Record<string, string> = {
@@ -88,13 +94,9 @@ const allStatuses: OrderStatus[] = [
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
 
-export function RecentOrdersTable({
-  orders,
-  isLoading,
-  onPeriodChange,
-  onStatusFilter,
-  onSortChange,
-}: RecentOrdersTableProps) {
+export function OrdersTable(props: RecentOrdersTableProps) {
+  const { orders, isLoading, onPeriodChange, onStatusFilter, onSortChange } =
+    props;
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("daily");
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>([]);
@@ -103,8 +105,11 @@ export function RecentOrdersTable({
   const [statusSort, setStatusSort] = useState<SortDirection>(null);
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [localPage, setLocalPage] = useState(1);
+  const [localItemsPerPage, setLocalItemsPerPage] = useState(5);
+
+  const currentPage = props.page || localPage;
+  const itemsPerPage = props.itemsPerPage || localItemsPerPage;
 
   const periodRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
@@ -143,13 +148,17 @@ export function RecentOrdersTable({
       ? selectedStatuses.filter((s) => s !== status)
       : [...selectedStatuses, status];
     setSelectedStatuses(newStatuses);
-    setCurrentPage(1); // Reset to first page when filtering
+    if (!props.isServerSide) {
+      setLocalPage(1); // Reset to first page when filtering locally
+    }
     onStatusFilter?.(newStatuses);
   };
 
   const clearStatusFilter = () => {
     setSelectedStatuses([]);
-    setCurrentPage(1);
+    if (!props.isServerSide) {
+      setLocalPage(1);
+    }
     onStatusFilter?.([]);
   };
 
@@ -169,8 +178,12 @@ export function RecentOrdersTable({
     onSortChange?.("status", newSort);
   };
 
-  // Filter and sort orders locally for demo
-  const filteredAndSortedOrders = useMemo(() => {
+  // Filter and sort orders locally if NOT server-side
+  const displayOrders = useMemo(() => {
+    if (props.isServerSide) {
+      return orders;
+    }
+
     let result = [...orders];
 
     // Filter by status
@@ -194,23 +207,38 @@ export function RecentOrdersTable({
     }
 
     return result;
-  }, [orders, selectedStatuses, amountSort, statusSort]);
+  }, [orders, selectedStatuses, amountSort, statusSort, props.isServerSide]);
 
   // Calculate pagination
-  const totalItems = filteredAndSortedOrders.length;
+  const totalItems = props.isServerSide
+    ? props.totalCount || 0
+    : displayOrders.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedOrders = filteredAndSortedOrders.slice(startIndex, endIndex);
+
+  const paginatedOrders = props.isServerSide
+    ? displayOrders
+    : displayOrders.slice(
+        (currentPage - 1) * itemsPerPage,
+        (currentPage - 1) * itemsPerPage + itemsPerPage,
+      );
 
   // Pagination handlers
   const goToPage = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    const newPage = Math.max(1, Math.min(page, totalPages));
+    if (props.isServerSide && props.onPageChange) {
+      props.onPageChange(newPage);
+    } else {
+      setLocalPage(newPage);
+    }
   };
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
+    if (props.isServerSide && props.onItemsPerPageChange) {
+      props.onItemsPerPageChange(newItemsPerPage);
+    } else {
+      setLocalItemsPerPage(newItemsPerPage);
+      setLocalPage(1); // Reset to first page when changing items per page
+    }
   };
 
   if (isLoading) {
@@ -354,12 +382,14 @@ export function RecentOrdersTable({
           </div>
 
           {/* View All Link */}
-          <a
-            href="/orders"
-            className="text-sm text-primary hover:text-primary/80 transition-colors"
-          >
-            View all →
-          </a>
+          {!props.isServerSide && (
+            <a
+              href="/dashboard/orders"
+              className="text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+              View all →
+            </a>
+          )}
         </div>
       </div>
 
