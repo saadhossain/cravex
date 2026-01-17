@@ -5,12 +5,13 @@ import {
   DataTable,
   SingleSelectFilter,
 } from "@/components/dashboard";
+import { Button } from "@/components/ui/button";
 import {
   useGetDishesQuery,
   useGetRestaurantsForFilterQuery,
 } from "@/store/api/adminApi";
 import { format } from "date-fns";
-import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -190,40 +191,47 @@ export default function DishesPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <div className="flex gap-4 mb-4 flex-wrap">
-        <input
-          placeholder="Search dishes..."
-          className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-        <SingleSelectFilter
-          label="Restaurant"
-          options={restaurantsOptions}
-          value={restaurantId || "all"}
-          onChange={(val) => {
-            setRestaurantId(val === "all" ? undefined : val);
-            setPage(1);
-          }}
-        />
-        <SingleSelectFilter
-          label="Availability"
-          options={[
-            { value: "all", label: "All Status" },
-            { value: "active", label: "Available" },
-            { value: "inactive", label: "Unavailable" },
-          ]}
-          value={isAvailable || "all"}
-          onChange={(val) => {
-            setIsAvailable(val === "all" ? undefined : val);
-            setPage(1);
-          }}
-        />
+      <div className="flex items-center justify-between">
+        <div className="w-3/4 flex gap-4">
+          <input
+            placeholder="Search dishes..."
+            className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+          <SingleSelectFilter
+            label="Restaurant"
+            options={restaurantsOptions}
+            value={restaurantId || "all"}
+            onChange={(val) => {
+              setRestaurantId(val === "all" ? undefined : val);
+              setPage(1);
+            }}
+          />
+          <SingleSelectFilter
+            label="Availability"
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "active", label: "Available" },
+              { value: "inactive", label: "Unavailable" },
+            ]}
+            value={isAvailable || "all"}
+            onChange={(val) => {
+              setIsAvailable(val === "all" ? undefined : val);
+              setPage(1);
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Dish
+          </Button>
+        </div>
       </div>
-
       <DataTable
         title="All Dishes"
         data={(data?.data || []) as AdminDish[]}

@@ -264,18 +264,6 @@ export default function OrdersPage() {
     },
   ];
 
-  // Map sort actions in columns to handleType
-  // To keep it simple, I actually used the state directly in the header definition above.
-  // Ideally, I'd pass the sort handler to DataTable, but DataTable currently expects columns to handle rendering headers.
-  // The header helper function I defined in ColumnDef allows passing a sort function, but I need to wire it up carefully.
-  // My DataTable implementation calls `header({ sort: ... })` if it's a function.
-  // But wait, my DataTable implementation passes a dummy sort function `{ sort: () => {}, ... }`.
-  // I need to update DataTable to NOT manage sort state itself if I want controlled sort, OR pass the sort handler to DataTable and have it pass it down.
-
-  // Actually, I can just use a closure in the columns definition since `handleSort` is in scope!
-  // And ignore the props passed by DataTable header render for now, or update DataTable to pass useful things.
-  // For now, I'll rely on the closure.
-
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
       <DataTable

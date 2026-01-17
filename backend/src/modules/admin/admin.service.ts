@@ -1,16 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
+import { Coupon } from '../../domain/entities/coupon.entity';
 import { MenuItem } from '../../domain/entities/menu-item.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
 import { Order } from '../../domain/entities/order.entity';
 import { Restaurant } from '../../domain/entities/restaurant.entity';
 import { User } from '../../domain/entities/user.entity';
 import {
+  AdminCouponsQueryDto,
   AdminDishesQueryDto,
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
   AdminUsersQueryDto,
+  CreateCouponDto,
   DashboardStatsDto,
   OrdersByStatusDto,
   RecentOrderDto,
@@ -34,6 +37,8 @@ export class AdminService {
     private readonly restaurantRepository: Repository<Restaurant>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Coupon)
+    private readonly couponRepository: Repository<Coupon>,
   ) {}
 
   private getDateRange(period?: Period): { start: Date; end: Date } {
@@ -651,5 +656,71 @@ export class AdminService {
     }
 
     return { message: 'User status updated successfully' };
+  }
+
+  async getCoupons(query: AdminCouponsQueryDto) {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      restaurantId,
+      isActive,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const queryBuilder = this.couponRepository
+      .createQueryBuilder('coupon')
+      .leftJoinAndSelect('coupon.restaurant', 'restaurant');
+
+    if (search) {
+      queryBuilder.andWhere('coupon.code ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    if (restaurantId) {
+      queryBuilder.andWhere('coupon.restaurantId = :restaurantId', {
+        restaurantId,
+      });
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('coupon.isActive = :isActive', { isActive });
+    }
+
+    // Sorting
+    const validSortFields = ['createdAt', 'code', 'validTo', 'usageCount'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    queryBuilder.orderBy(`coupon.${sortField}`, sortOrder);
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const [coupons, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: coupons,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async createCoupon(createCouponDto: CreateCouponDto) {
+    const coupon = this.couponRepository.create(createCouponDto);
+    return this.couponRepository.save(coupon);
+  }
+
+  async deleteCoupon(id: string) {
+    const result = await this.couponRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Coupon not found');
+    }
+    return { message: 'Coupon deleted successfully' };
   }
 }

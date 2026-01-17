@@ -215,6 +215,56 @@ export interface AdminUsersResponse {
   };
 }
 
+export interface AdminCouponsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  restaurantId?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export interface CreateCouponPayload {
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  minimumOrder?: number;
+  maxDiscount?: number;
+  validFrom?: string;
+  validTo?: string;
+  maxUsageCount?: number;
+  restaurantId?: string;
+  isActive?: boolean;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  minimumOrder?: number;
+  maxDiscount?: number;
+  validFrom?: string;
+  validTo?: string;
+  maxUsageCount?: number;
+  usageCount: number;
+  isActive: boolean;
+  restaurantId?: string;
+  restaurant?: { id: string; name: string };
+  createdAt: string;
+}
+
+export interface AdminCouponsResponse {
+  data: Coupon[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
@@ -277,6 +327,28 @@ export const adminApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User", "Restaurant"],
       },
     ),
+    getCoupons: builder.query<AdminCouponsResponse, AdminCouponsQuery>({
+      query: (params) => ({
+        url: "/admin/coupons",
+        params,
+      }),
+      providesTags: ["Coupon"],
+    }),
+    createCoupon: builder.mutation<void, CreateCouponPayload>({
+      query: (body) => ({
+        url: "/admin/coupons",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Coupon"],
+    }),
+    deleteCoupon: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/coupons/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Coupon"],
+    }),
   }),
 });
 
@@ -289,4 +361,7 @@ export const {
   useGetDishesQuery,
   useGetUsersQuery,
   useUpdateUserStatusMutation,
+  useGetCouponsQuery,
+  useCreateCouponMutation,
+  useDeleteCouponMutation,
 } = adminApi;

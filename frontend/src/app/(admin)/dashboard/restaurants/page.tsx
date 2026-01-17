@@ -5,9 +5,10 @@ import {
   DataTable,
   SingleSelectFilter,
 } from "@/components/dashboard";
+import { Button } from "@/components/ui/button";
 import { useGetRestaurantsQuery } from "@/store/api/adminApi";
 import { format } from "date-fns";
-import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -169,31 +170,38 @@ export default function RestaurantsPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <div className="flex gap-4 mb-4">
-        <input
-          placeholder="Search restaurants..."
-          className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-        <SingleSelectFilter
-          label="Status"
-          options={[
-            { value: "all", label: "All Status" },
-            { value: "active", label: "Active" },
-            { value: "inactive", label: "Inactive" },
-          ]}
-          value={isActive || "all"}
-          onChange={(val) => {
-            setIsActive(val === "all" ? undefined : val);
-            setPage(1);
-          }}
-        />
+      <div className="flex justify-between">
+        <div className="w-3/4 flex gap-4">
+          <input
+            placeholder="Search restaurants..."
+            className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+          <SingleSelectFilter
+            label="Status"
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+            value={isActive || "all"}
+            onChange={(val) => {
+              setIsActive(val === "all" ? undefined : val);
+              setPage(1);
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Restaurant
+          </Button>
+        </div>
       </div>
-
       <DataTable
         title="All Restaurants"
         data={(data?.data || []) as AdminRestaurant[]}

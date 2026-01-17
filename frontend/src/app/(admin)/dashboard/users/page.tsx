@@ -5,11 +5,13 @@ import {
   DataTable,
   SingleSelectFilter,
 } from "@/components/dashboard";
+import { Button } from "@/components/ui/button";
 import {
   useGetUsersQuery,
   useUpdateUserStatusMutation,
 } from "@/store/api/adminApi";
 import { format } from "date-fns";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 interface AdminUser {
@@ -132,46 +134,53 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <div className="flex gap-4 mb-4 flex-wrap">
-        <input
-          placeholder="Search users..."
-          className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-        <SingleSelectFilter
-          label="Role"
-          options={[
-            { value: "all", label: "All Roles" },
-            { value: "customer", label: "Customer" },
-            { value: "restaurant", label: "Restaurant" },
-          ]}
-          value={role || "all"}
-          onChange={(val) => {
-            setRole(val === "all" ? undefined : (val as any));
-            setPage(1);
-          }}
-        />
-        <SingleSelectFilter
-          label="Status"
-          options={[
-            { value: "all", label: "All Status" },
-            { value: "active", label: "Active" },
-            { value: "inactive", label: "Inactive" },
-          ]}
-          value={
-            isActive === undefined ? "all" : isActive ? "active" : "inactive"
-          }
-          onChange={(val) => {
-            setIsActive(val === "all" ? undefined : val === "active");
-            setPage(1);
-          }}
-        />
+      <div className="flex justify-between">
+        <div className="w-3/4 flex gap-4">
+          <input
+            placeholder="Search users..."
+            className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+          <SingleSelectFilter
+            label="Role"
+            options={[
+              { value: "all", label: "All Roles" },
+              { value: "customer", label: "Customer" },
+              { value: "restaurant", label: "Restaurant" },
+            ]}
+            value={role || "all"}
+            onChange={(val) => {
+              setRole(val === "all" ? undefined : (val as any));
+              setPage(1);
+            }}
+          />
+          <SingleSelectFilter
+            label="Status"
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+            value={
+              isActive === undefined ? "all" : isActive ? "active" : "inactive"
+            }
+            onChange={(val) => {
+              setIsActive(val === "all" ? undefined : val === "active");
+              setPage(1);
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </div>
       </div>
-
       <DataTable
         title="Recent Users"
         data={(data?.data || []) as AdminUser[]}

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -12,10 +14,12 @@ import { Roles } from '../auth/decorators';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { AdminService } from './admin.service';
 import {
+  AdminCouponsQueryDto,
   AdminDishesQueryDto,
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
   AdminUsersQueryDto,
+  CreateCouponDto,
   DashboardStatsDto,
   PeriodQueryDto,
   TopSellingDishesResponseDto,
@@ -85,5 +89,23 @@ export class AdminController {
     @Body() updateStatusDto: UpdateUserStatusDto,
   ) {
     return this.adminService.updateUserStatus(id, updateStatusDto.isActive);
+  }
+
+  @Get('coupons')
+  @ApiOperation({ summary: 'Get all coupons with filtering for superadmin' })
+  async getCoupons(@Query() query: AdminCouponsQueryDto) {
+    return this.adminService.getCoupons(query);
+  }
+
+  @Post('coupons')
+  @ApiOperation({ summary: 'Create a new coupon' })
+  async createCoupon(@Body() createCouponDto: CreateCouponDto) {
+    return this.adminService.createCoupon(createCouponDto);
+  }
+
+  @Delete('coupons/:id')
+  @ApiOperation({ summary: 'Delete a coupon' })
+  async deleteCoupon(@Param('id') id: string) {
+    return this.adminService.deleteCoupon(id);
   }
 }
