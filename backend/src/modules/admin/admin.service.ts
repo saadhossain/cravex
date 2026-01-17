@@ -10,6 +10,7 @@ import {
   AdminDishesQueryDto,
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
+  AdminUsersQueryDto,
   DashboardStatsDto,
   OrdersByStatusDto,
   RecentOrderDto,
@@ -558,6 +559,7 @@ export class AdminService {
   }
 
   async getUsers(query: AdminUsersQueryDto) {
+    console.log('getUsers called with query:', query);
     const {
       page = 1,
       limit = 10,
@@ -568,46 +570,59 @@ export class AdminService {
       sortOrder = 'DESC',
     } = query;
 
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    try {
+      const queryBuilder = this.userRepository.createQueryBuilder('user');
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${search}%` },
-      );
+      if (search) {
+        queryBuilder.andWhere(
+          '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
+          { search: `%${search}%` },
+        );
+      }
+
+      if (role) {
+        queryBuilder.andWhere('user.role = :role', { role });
+      }
+
+      if (isActive !== undefined) {
+        queryBuilder.andWhere('user.isActive = :isActive', { isActive });
+      }
+
+      console.log(queryBuilder.getSql(), queryBuilder.getParameters());
+
+      // Sorting
+      const validSortFields = ['createdAt', 'firstName', 'lastName', 'email'];
+      const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+      queryBuilder.orderBy(`user.${sortField}`, sortOrder);
+
+      // Pagination
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const [users, total] = await queryBuilder.getManyAndCount();
+      console.log(`Found ${total} users`);
+      if (users.length > 0) {
+        console.log('First user:', users[0]);
+      } else {
+        console.log('No users found with detailed query');
+      }
+
+      return {
+        data: users.map((user) => {
+          const { password, refreshToken, ...result } = user;
+          return result;
+        }),
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      console.error('Error in getUsers:', error);
+      throw error;
     }
-
-    if (role) {
-      queryBuilder.andWhere('user.role = :role', { role });
-    }
-
-    if (isActive !== undefined) {
-      queryBuilder.andWhere('user.isActive = :isActive', { isActive });
-    }
-
-    // Sorting
-    const validSortFields = ['createdAt', 'firstName', 'lastName', 'email'];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-    queryBuilder.orderBy(`user.${sortField}`, sortOrder);
-
-    // Pagination
-    const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit);
-
-    const [users, total] = await queryBuilder.getManyAndCount();
-
-    return {
-      data: users.map((user) => {
-        const { password, refreshToken, ...result } = user;
-        return result;
-      }),
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
   }
 
   async updateUserStatus(id: string, isActive: boolean) {

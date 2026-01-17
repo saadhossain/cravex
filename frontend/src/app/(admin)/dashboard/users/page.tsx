@@ -31,13 +31,19 @@ export default function UsersPage() {
   >(undefined);
   const [isActive, setIsActive] = useState<boolean | undefined>(undefined);
 
-  const { data, isLoading } = useGetUsersQuery({
+  const { data, isLoading, error } = useGetUsersQuery({
     page,
     limit,
     search,
     role,
     isActive,
   });
+
+  if (error) {
+    console.error("Error fetching users:", error);
+  }
+
+  console.log("Users data:", data);
 
   const [updateUserStatus, { isLoading: isUpdating }] =
     useUpdateUserStatusMutation();
