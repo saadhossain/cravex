@@ -113,6 +113,39 @@ export interface PeriodQuery {
   period?: TimePeriod;
 }
 
+export interface AdminRestaurantsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export interface AdminRestaurant {
+  id: string;
+  name: string;
+  description?: string;
+  address?: string; // or Address object depending on entity
+  phone?: string;
+  email?: string;
+  isActive: boolean;
+  rating?: number;
+  logoUrl?: string;
+  createdAt: string;
+  // Add other fields as needed
+}
+
+export interface AdminRestaurantsResponse {
+  data: AdminRestaurant[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
@@ -143,6 +176,16 @@ export const adminApi = apiSlice.injectEndpoints({
       query: () => "/admin/restaurants/list",
       providesTags: ["Restaurant"],
     }),
+    getRestaurants: builder.query<
+      AdminRestaurantsResponse,
+      AdminRestaurantsQuery
+    >({
+      query: (params) => ({
+        url: "/admin/restaurants",
+        params,
+      }),
+      providesTags: ["Restaurant"],
+    }),
   }),
 });
 
@@ -151,4 +194,5 @@ export const {
   useGetTopSellingDishesQuery,
   useGetAdminOrdersQuery,
   useGetRestaurantsForFilterQuery,
+  useGetRestaurantsQuery,
 } = adminApi;

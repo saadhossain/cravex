@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  DataTable,
   OrderStatusChart,
-  OrdersTable,
   RevenueChart,
   StatsCard,
   StatsCardCarousel,
@@ -23,6 +23,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 // Mock data for top selling dishes - replace with API call later
 const mockTopDishes: TopDish[] = [
@@ -214,7 +216,74 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col gap-4 md:gap-6">
         {/* Recent Orders - Left, 8 columns */}
         <div className="w-full">
-          <OrdersTable orders={stats.recentOrders} />
+          <DataTable
+            title="Recent Order Details"
+            data={stats.recentOrders}
+            columns={[
+              {
+                header: "Item",
+                cell: (order) => (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
+                      {order.image ? (
+                        <Image
+                          src={order.image}
+                          alt={order.title || "Order"}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-lg">
+                          🍽️
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                      {order.title || `Order Items`}
+                    </span>
+                  </div>
+                ),
+              },
+              {
+                header: "Customer",
+                cell: (order) => (
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {order.customerName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      #{order.orderNumber}
+                    </p>
+                  </div>
+                ),
+              },
+              {
+                header: "Amount",
+                cell: (order) => (
+                  <span className="text-sm font-semibold text-foreground">
+                    £{order.total.toFixed(2)}
+                  </span>
+                ),
+              },
+              {
+                header: "Status",
+                cell: (order) => (
+                  <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium border bg-muted text-muted-foreground border-border">
+                    {order.status}
+                  </span>
+                ),
+              },
+            ]}
+            filters={
+              <Link
+                href="/dashboard/orders"
+                className="text-sm text-primary hover:text-primary/80 transition-colors"
+              >
+                View all →
+              </Link>
+            }
+          />
         </div>
 
         {/* Top Selling Dishes - Right, 4 columns */}

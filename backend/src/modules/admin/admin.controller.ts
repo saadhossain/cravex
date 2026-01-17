@@ -5,6 +5,7 @@ import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { AdminService } from './admin.service';
 import {
   AdminOrdersQueryDto,
+  AdminRestaurantsQueryDto,
   DashboardStatsDto,
   PeriodQueryDto,
   TopSellingDishesResponseDto,
@@ -38,6 +39,14 @@ export class AdminController {
   @ApiOperation({ summary: 'Get all orders with filtering for superadmin' })
   async getOrders(@Query() query: AdminOrdersQueryDto) {
     return this.adminService.getOrders(query);
+  }
+
+  @Get('restaurants')
+  @ApiOperation({
+    summary: 'Get all restaurants with filtering for superadmin',
+  })
+  async getRestaurants(@Query() query: AdminRestaurantsQueryDto) {
+    return this.adminService.getRestaurants(query);
   }
 
   @Get('restaurants/list')

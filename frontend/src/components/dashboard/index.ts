@@ -1,6 +1,7 @@
 export * from "./DashboardFilters";
-export { OrdersTable } from "./OrdersTable";
-export type { OrderStatus, RecentOrder, SortDirection } from "./OrdersTable";
+export { DataTable } from "./DataTable";
+export type { ColumnDef, DataTableProps } from "./DataTable";
+export * from "./Filters";
 export { OrderStatusChart } from "./OrderStatusChart";
 export type { OrdersByStatus } from "./OrderStatusChart";
 export { RevenueChart } from "./RevenueChart";

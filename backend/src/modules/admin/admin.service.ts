@@ -8,6 +8,7 @@ import { Restaurant } from '../../domain/entities/restaurant.entity';
 import { User } from '../../domain/entities/user.entity';
 import {
   AdminOrdersQueryDto,
+  AdminRestaurantsQueryDto,
   DashboardStatsDto,
   OrdersByStatusDto,
   RecentOrderDto,
@@ -433,5 +434,50 @@ export class AdminService {
     });
 
     return restaurants;
+  }
+
+  async getRestaurants(query: AdminRestaurantsQueryDto) {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      isActive,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const queryBuilder =
+      this.restaurantRepository.createQueryBuilder('restaurant');
+
+    if (search) {
+      queryBuilder.andWhere('restaurant.name ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('restaurant.isActive = :isActive', { isActive });
+    }
+
+    // Sorting
+    const validSortFields = ['createdAt', 'name', 'rating'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    queryBuilder.orderBy(`restaurant.${sortField}`, sortOrder);
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const [restaurants, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: restaurants,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

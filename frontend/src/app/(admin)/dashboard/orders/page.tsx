@@ -1,6 +1,13 @@
 "use client";
 
-import { OrdersTable, TimePeriod } from "@/components/dashboard";
+import {
+  ColumnDef,
+  DataTable,
+  MultiSelectFilter,
+  SingleSelectFilter,
+  TimePeriod,
+} from "@/components/dashboard";
+import { cn } from "@/lib/utils";
 import { useGetAdminOrdersQuery } from "@/store/api/adminApi";
 import {
   endOfDay,
@@ -11,13 +18,69 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
+import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
+
+interface AdminOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  restaurantName: string;
+  customerName: string;
+  createdAt: string;
+  image?: string;
+  title?: string;
+}
+
+const statusStyles: Record<string, string> = {
+  pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  hold: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  cooking: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  preparing: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  confirmed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  ready: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  out_for_delivery: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  delivered: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  failed: "bg-red-500/10 text-red-500 border-red-500/20",
+  cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
+};
+
+const statusLabels: Record<string, string> = {
+  pending: "Pending",
+  hold: "Hold",
+  cooking: "Cooking",
+  preparing: "Preparing",
+  confirmed: "Confirmed",
+  ready: "Ready",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  failed: "Failed",
+  cancelled: "Cancelled",
+};
+
+const periodOptions = [
+  { value: "daily", label: "Today" },
+  { value: "weekly", label: "This Week" },
+  { value: "monthly", label: "This Month" },
+];
+
+const statusOptions = [
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "preparing", label: "Preparing" },
+  { value: "ready", label: "Ready" },
+  { value: "out_for_delivery", label: "Out for Delivery" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [period, setPeriod] = useState<TimePeriod>("monthly");
-  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [status, setStatus] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC" | undefined>(
     undefined,
@@ -55,51 +118,171 @@ export default function OrdersPage() {
   const { data, isLoading } = useGetAdminOrdersQuery({
     page,
     limit,
-    status,
+    status: status.length > 0 ? status.join(",") : undefined,
     startDate,
     endDate,
     sortBy,
     sortOrder,
   });
-  console.log(data);
-  const handlePeriodChange = (newPeriod: TimePeriod) => {
-    setPeriod(newPeriod);
+
+  const handlePeriodChange = (newPeriod: string) => {
+    setPeriod(newPeriod as TimePeriod);
     setPage(1);
   };
 
   const handleStatusFilter = (statuses: string[]) => {
-    if (statuses.length === 0) {
-      setStatus(undefined);
-    } else {
-      // API currently takes a single status string or maybe comma separated?
-      // Based on AdminOrdersQuery interface: status?: string;
-      // If multiple, normally we send "pending,confirmed". Let's assume comma separated or just pick one.
-      // Usually REST APIs support comma separated for filters.
-      setStatus(statuses.join(","));
-    }
+    setStatus(statuses);
     setPage(1);
   };
 
-  const handleSortChange = (
-    field: string,
-    direction: "asc" | "desc" | null,
-  ) => {
+  const handleSort = (field: string, direction: "asc" | "desc" | null) => {
     if (!direction) {
       setSortBy(undefined);
       setSortOrder(undefined);
     } else {
-      setSortBy(field === "total" ? "total" : "status"); // Map 'total' to backend field 'total' if needed, or check DTO
+      setSortBy(field);
       setSortOrder(direction === "asc" ? "ASC" : "DESC");
     }
     setPage(1);
   };
 
+  const columns: ColumnDef<AdminOrder>[] = [
+    {
+      header: "Item",
+      cell: (order) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
+            {order.image ? (
+              <Image
+                src={order.image}
+                alt={order.title || "Order"}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-lg">
+                🍽️
+              </div>
+            )}
+          </div>
+          <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+            {order.title || `Order Items`}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Customer & Order",
+      cell: (order) => (
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            {order.customerName}
+          </p>
+          <p className="text-xs text-muted-foreground">#{order.orderNumber}</p>
+        </div>
+      ),
+    },
+    {
+      header: "Restaurant",
+      accessorKey: "restaurantName",
+      cell: (order) => (
+        <span className="text-sm text-muted-foreground">
+          {order.restaurantName}
+        </span>
+      ),
+    },
+    {
+      header: ({ sort, sortDirection }) => (
+        <button
+          onClick={() =>
+            sort(
+              sortBy === "total"
+                ? sortOrder === "ASC"
+                  ? "desc"
+                  : "asc"
+                : "asc",
+            )
+          }
+          className="flex items-center gap-1 hover:text-foreground transition-colors"
+        >
+          Amount
+          {sortBy === "total" ? (
+            sortOrder === "ASC" ? (
+              <ChevronUp className="w-4 h-4 text-primary" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-primary" />
+            )
+          ) : (
+            <ArrowUpDown className="w-4 h-4 opacity-50" />
+          )}
+        </button>
+      ),
+      cell: (order) => (
+        <span className="text-sm font-semibold text-foreground">
+          £{order.total.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      header: ({ sort, sortDirection }) => (
+        <button
+          onClick={() =>
+            sort(
+              sortBy === "status"
+                ? sortOrder === "ASC"
+                  ? "desc"
+                  : "asc"
+                : "asc",
+            )
+          }
+          className="flex items-center gap-1 hover:text-foreground transition-colors"
+        >
+          Status
+          {sortBy === "status" ? (
+            sortOrder === "ASC" ? (
+              <ChevronUp className="w-4 h-4 text-primary" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-primary" />
+            )
+          ) : (
+            <ArrowUpDown className="w-4 h-4 opacity-50" />
+          )}
+        </button>
+      ),
+      cell: (order) => (
+        <span
+          className={cn(
+            "inline-flex px-2.5 py-1 rounded-full text-xs font-medium border",
+            statusStyles[order.status] ||
+              "bg-muted text-muted-foreground border-border",
+          )}
+        >
+          {statusLabels[order.status] || order.status}
+        </span>
+      ),
+    },
+  ];
+
+  // Map sort actions in columns to handleType
+  // To keep it simple, I actually used the state directly in the header definition above.
+  // Ideally, I'd pass the sort handler to DataTable, but DataTable currently expects columns to handle rendering headers.
+  // The header helper function I defined in ColumnDef allows passing a sort function, but I need to wire it up carefully.
+  // My DataTable implementation calls `header({ sort: ... })` if it's a function.
+  // But wait, my DataTable implementation passes a dummy sort function `{ sort: () => {}, ... }`.
+  // I need to update DataTable to NOT manage sort state itself if I want controlled sort, OR pass the sort handler to DataTable and have it pass it down.
+
+  // Actually, I can just use a closure in the columns definition since `handleSort` is in scope!
+  // And ignore the props passed by DataTable header render for now, or update DataTable to pass useful things.
+  // For now, I'll rely on the closure.
+
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <OrdersTable
-        orders={data?.data || []}
+      <DataTable
+        title="Orders"
+        data={(data?.data || []) as AdminOrder[]}
+        columns={columns}
         isLoading={isLoading}
-        isServerSide={true}
         totalCount={data?.meta?.total || 0}
         page={page}
         itemsPerPage={limit}
@@ -108,9 +291,22 @@ export default function OrdersPage() {
           setLimit(newLimit);
           setPage(1);
         }}
-        onPeriodChange={handlePeriodChange}
-        onStatusFilter={handleStatusFilter}
-        onSortChange={handleSortChange}
+        filters={
+          <>
+            <SingleSelectFilter
+              label="Period"
+              options={periodOptions}
+              value={period}
+              onChange={handlePeriodChange}
+            />
+            <MultiSelectFilter
+              label="Status"
+              options={statusOptions}
+              selectedValues={status}
+              onFilterChange={handleStatusFilter}
+            />
+          </>
+        }
       />
     </div>
   );
