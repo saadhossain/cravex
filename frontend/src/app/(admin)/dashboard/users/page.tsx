@@ -132,10 +132,6 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-foreground">Users</h1>
-      </div>
-
       <div className="flex gap-4 mb-4 flex-wrap">
         <input
           placeholder="Search users..."
