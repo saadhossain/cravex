@@ -146,24 +146,61 @@ export interface AdminRestaurantsResponse {
   };
 }
 
+export interface AdminDishesQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  restaurantId?: string;
+  categoryId?: string;
+  isAvailable?: boolean;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export interface AdminDish {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  isAvailable: boolean;
+  restaurantId: string;
+  restaurant?: {
+    name: string;
+  };
+  categoryId?: string;
+  category?: {
+    name: string;
+  };
+  createdAt: string;
+}
+
+export interface AdminDishesResponse {
+  data: AdminDish[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
-      query: (params) => ({
+      query: (args) => ({
         url: "/admin/dashboard/stats",
-        params: params || undefined,
+        params: args || {},
       }),
-      providesTags: ["Order"],
     }),
     getTopSellingDishes: builder.query<
       TopSellingDishesResponse,
       PeriodQuery | void
     >({
-      query: (params) => ({
+      query: (args) => ({
         url: "/admin/dashboard/top-selling-dishes",
-        params: params || undefined,
+        params: args || {},
       }),
-      providesTags: ["Order"],
     }),
     getAdminOrders: builder.query<AdminOrdersResponse, AdminOrdersQuery>({
       query: (params) => ({
@@ -186,6 +223,13 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["Restaurant"],
     }),
+    getDishes: builder.query<AdminDishesResponse, AdminDishesQuery>({
+      query: (params) => ({
+        url: "/admin/dishes",
+        params,
+      }),
+      providesTags: ["Menu"], // Assuming Menu tag exists or should be added
+    }),
   }),
 });
 
@@ -195,4 +239,5 @@ export const {
   useGetAdminOrdersQuery,
   useGetRestaurantsForFilterQuery,
   useGetRestaurantsQuery,
+  useGetDishesQuery,
 } = adminApi;

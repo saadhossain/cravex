@@ -1,3 +1,4 @@
+export * from './admin-dishes-query.dto';
 export * from './admin-orders-query.dto';
 export * from './admin-restaurants-query.dto';
 export * from './dashboard-stats.dto';

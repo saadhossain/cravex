@@ -4,6 +4,7 @@ import { Roles } from '../auth/decorators';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { AdminService } from './admin.service';
 import {
+  AdminDishesQueryDto,
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
   DashboardStatsDto,
@@ -53,5 +54,11 @@ export class AdminController {
   @ApiOperation({ summary: 'Get restaurants list for filter dropdown' })
   async getRestaurantsForFilter() {
     return this.adminService.getRestaurantsForFilter();
+  }
+
+  @Get('dishes')
+  @ApiOperation({ summary: 'Get all dishes with filtering for superadmin' })
+  async getDishes(@Query() query: AdminDishesQueryDto) {
+    return this.adminService.getDishes(query);
   }
 }
