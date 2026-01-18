@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, MoreThanOrEqual, Repository } from 'typeorm';
 import { Coupon } from '../../domain/entities/coupon.entity';
 import { MenuItem } from '../../domain/entities/menu-item.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
@@ -669,36 +669,51 @@ export class AdminService {
       sortOrder = 'DESC',
     } = query;
 
-    const queryBuilder = this.couponRepository
-      .createQueryBuilder('coupon')
-      .leftJoinAndSelect('coupon.restaurant', 'restaurant');
+    const where: FindOptionsWhere<Coupon> = {};
 
     if (search) {
-      queryBuilder.andWhere('coupon.code ILIKE :search', {
-        search: `%${search}%`,
-      });
+      where.code = ILike(`%${search}%`);
     }
 
     if (restaurantId) {
-      queryBuilder.andWhere('coupon.restaurantId = :restaurantId', {
-        restaurantId,
-      });
+      where.restaurantId = restaurantId;
     }
 
     if (isActive !== undefined) {
-      queryBuilder.andWhere('coupon.isActive = :isActive', { isActive });
+      where.isActive = isActive;
     }
 
-    // Sorting
+    // Validate sort field
     const validSortFields = ['createdAt', 'code', 'validTo', 'usageCount'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-    queryBuilder.orderBy(`coupon.${sortField}`, sortOrder);
 
-    // Pagination
-    const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit);
-
-    const [coupons, total] = await queryBuilder.getManyAndCount();
+    const [coupons, total] = await this.couponRepository.findAndCount({
+      where,
+      relations: ['restaurant'],
+      order: { [sortField]: sortOrder },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        code: true,
+        discountValue: true,
+        discountType: true,
+        minimumOrder: true,
+        maxDiscount: true,
+        usageCount: true,
+        maxUsageCount: true,
+        isActive: true,
+        validFrom: true,
+        validTo: true,
+        createdAt: true,
+        restaurantId: true,
+        menuItemId: true,
+        restaurant: {
+          id: true,
+          name: true,
+        },
+      },
+    });
 
     return {
       data: coupons,
