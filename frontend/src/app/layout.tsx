@@ -1,4 +1,5 @@
 import { ThemeProvider } from "@/components/theme";
+import { Toaster } from "@/components/ui/sonner";
 import { ReduxProvider } from "@/store/provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -20,7 +21,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider>
-          <ReduxProvider>{children}</ReduxProvider>
+          <ReduxProvider>
+            {children}
+            <Toaster />
+          </ReduxProvider>
         </ThemeProvider>
       </body>
     </html>

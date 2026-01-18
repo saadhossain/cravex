@@ -23,7 +23,7 @@ import {
   useGetRestaurantsForFilterQuery,
 } from "@/store/api/adminApi";
 import { format } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
+import { Copy, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -82,7 +82,24 @@ export default function CouponsPage() {
     {
       header: "Code",
       cell: (coupon) => (
-        <span className="font-medium text-foreground">{coupon.code}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground">{coupon.code}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(coupon.code);
+                toast.success("Code copied to clipboard");
+              } else {
+                toast.error("Clipboard access not available");
+              }
+            }}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
       ),
     },
     {
@@ -132,12 +149,12 @@ export default function CouponsPage() {
       header: "Validity",
       cell: (coupon) => (
         <div className="flex flex-col text-xs text-muted-foreground">
-          {coupon.validFrom && (
+          {coupon.validFrom && !isNaN(new Date(coupon.validFrom).getTime()) && (
             <span>
               From: {format(new Date(coupon.validFrom), "MMM d, yyyy")}
             </span>
           )}
-          {coupon.validTo && (
+          {coupon.validTo && !isNaN(new Date(coupon.validTo).getTime()) && (
             <span>To: {format(new Date(coupon.validTo), "MMM d, yyyy")}</span>
           )}
           {!coupon.validFrom && !coupon.validTo && <span>Always valid</span>}

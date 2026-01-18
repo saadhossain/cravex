@@ -64,6 +64,14 @@ export class CreateCouponDto {
   @IsUUID()
   restaurantId?: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Specific menu item ID (nullable for restaurant-wide or site-wide)',
+  })
+  @IsOptional()
+  @IsUUID()
+  menuItemId?: string;
+
   @ApiPropertyOptional({ default: true })
   @IsOptional()
   @IsBoolean()

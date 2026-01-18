@@ -1,5 +1,6 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { Auditable } from '../../shared/domain/auditable.entity';
+import { MenuItem } from './menu-item.entity';
 import { Restaurant } from './restaurant.entity';
 
 export type DiscountType = 'percentage' | 'fixed';
@@ -46,4 +47,10 @@ export class Coupon extends Auditable {
 
   @Column({ nullable: true })
   restaurantId: string;
+
+  @ManyToOne(() => MenuItem, { nullable: true })
+  menuItem: MenuItem;
+
+  @Column({ nullable: true })
+  menuItemId: string;
 }

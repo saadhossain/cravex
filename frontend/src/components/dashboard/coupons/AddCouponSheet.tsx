@@ -1,9 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -19,12 +25,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import {
   useCreateCouponMutation,
+  useGetDishesQuery,
   useGetRestaurantsForFilterQuery,
 } from "@/store/api/adminApi";
-import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { format } from "date-fns";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 interface AddCouponSheetProps {
@@ -38,16 +49,18 @@ interface CouponFormData {
   discountValue: string;
   minimumOrder?: string;
   maxDiscount?: string;
-  validFrom?: string;
-  validTo?: string;
+  validFrom?: Date;
+  validTo?: Date;
   maxUsageCount?: string;
   restaurantId?: string;
+  menuItemId?: string;
   isActive: boolean;
 }
 
 export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
   const [createCoupon, { isLoading }] = useCreateCouponMutation();
   const { data: restaurants } = useGetRestaurantsForFilterQuery();
+  const [scope, setScope] = useState<"restaurant" | "food">("restaurant");
 
   const {
     register,
@@ -55,6 +68,7 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
     reset,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<CouponFormData>({
     defaultValues: {
@@ -64,10 +78,25 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
   });
 
   const discountType = watch("discountType");
+  const selectedRestaurantId = watch("restaurantId");
+
+  const { data: dishesData } = useGetDishesQuery(
+    {
+      restaurantId:
+        selectedRestaurantId === "all" ? undefined : selectedRestaurantId,
+      limit: 100,
+    },
+    {
+      skip:
+        scope !== "food" ||
+        !selectedRestaurantId ||
+        selectedRestaurantId === "all",
+    },
+  );
 
   const onSubmit = async (data: CouponFormData) => {
     try {
-      await createCoupon({
+      const payload = {
         ...data,
         discountValue: Number(data.discountValue),
         minimumOrder: data.minimumOrder ? Number(data.minimumOrder) : undefined,
@@ -77,14 +106,22 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
           : undefined,
         restaurantId:
           data.restaurantId === "all" ? undefined : data.restaurantId,
-      }).unwrap();
+        menuItemId: scope === "food" ? data.menuItemId : undefined,
+        validFrom: data.validFrom ? data.validFrom.toISOString() : undefined,
+        validTo: data.validTo ? data.validTo.toISOString() : undefined,
+      };
+
+      await createCoupon(payload).unwrap();
 
       toast.success("Coupon created successfully");
       reset();
+      setScope("restaurant");
       onOpenChange(false);
-    } catch (error) {
-      toast.error("Failed to create coupon");
-      console.error(error);
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message || error?.message || "Failed to create coupon",
+      );
+      console.error("Create coupon error:", error);
     }
   };
 
@@ -173,19 +210,75 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="validFrom">Valid From</Label>
-              <Input
-                id="validFrom"
-                type="datetime-local"
-                {...register("validFrom")}
+              <Label>Valid From</Label>
+              <Controller
+                control={control}
+                name="validFrom"
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(field.value, "MMM d, yyyy")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        className="w-52"
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="validTo">Valid To</Label>
-              <Input
-                id="validTo"
-                type="datetime-local"
-                {...register("validTo")}
+              <Label>Valid To</Label>
+              <Controller
+                control={control}
+                name="validTo"
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(field.value, "MMM d, yyyy")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        className="w-52"
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
               />
             </div>
           </div>
@@ -200,24 +293,99 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="restaurantId">Restaurant (Optional)</Label>
-            <Select onValueChange={(val) => setValue("restaurantId", val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select restaurant (or site-wide)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Restaurants (Site-wide)</SelectItem>
-                {restaurants?.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Leave empty or select All for site-wide coupon.
-            </p>
+          <div className="space-y-4">
+            <Label>Coupon Scope</Label>
+            <Tabs
+              defaultValue="restaurant"
+              value={scope}
+              onValueChange={(val) => setScope(val as "restaurant" | "food")}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="restaurant">Restaurant-wide</TabsTrigger>
+                <TabsTrigger value="food">Specific Food</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="restaurant" className="space-y-2 pt-2">
+                <Label htmlFor="restaurantId">Restaurant (Optional)</Label>
+                <Select
+                  onValueChange={(val) => setValue("restaurantId", val)}
+                  defaultValue={watch("restaurantId")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select restaurant (or site-wide)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      All Restaurants (Site-wide)
+                    </SelectItem>
+                    {restaurants?.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Leave empty or select All for site-wide coupon.
+                </p>
+              </TabsContent>
+
+              <TabsContent value="food" className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="restaurantId-food">
+                    Select Restaurant <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    onValueChange={(val) => {
+                      setValue("restaurantId", val);
+                      setValue("menuItemId", ""); // Reset dish when restaurant changes
+                    }}
+                    defaultValue={watch("restaurantId")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a restaurant first" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {restaurants?.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="menuItemId">
+                    Select Food Item <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    onValueChange={(val) => setValue("menuItemId", val)}
+                    disabled={
+                      !selectedRestaurantId || selectedRestaurantId === "all"
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select food item" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dishesData?.data?.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name} ({d.price})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(!selectedRestaurantId ||
+                    selectedRestaurantId === "all") && (
+                    <p className="text-xs text-red-500">
+                      Please select a restaurant to see food items.
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div className="flex items-center space-x-2 pt-2">
