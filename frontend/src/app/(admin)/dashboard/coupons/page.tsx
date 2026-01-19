@@ -41,6 +41,7 @@ interface Coupon {
   isActive: boolean;
   restaurantId?: string;
   restaurant?: { id: string; name: string };
+  menuItem?: { id: string; name: string };
   createdAt: string;
 }
 
@@ -117,6 +118,14 @@ export default function CouponsPage() {
       cell: (coupon) => (
         <span className="text-sm text-muted-foreground">
           {coupon.restaurant?.name || "Site-wide"}
+        </span>
+      ),
+    },
+    {
+      header: "Food",
+      cell: (coupon) => (
+        <span className="text-sm text-muted-foreground">
+          {coupon.menuItem?.name || "All Foods"}
         </span>
       ),
     },
