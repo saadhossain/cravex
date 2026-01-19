@@ -22,8 +22,14 @@ import {
   useGetCouponsQuery,
   useGetRestaurantsForFilterQuery,
 } from "@/store/api/adminApi";
+import {
+  faCopy,
+  faPencil,
+  faPlus,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { format } from "date-fns";
-import { Copy, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -99,7 +105,7 @@ export default function CouponsPage() {
               }
             }}
           >
-            <Copy className="h-3 w-3" />
+            <FontAwesomeIcon icon={faCopy} className="h-3 w-3" />
           </Button>
         </div>
       ),
@@ -184,21 +190,7 @@ export default function CouponsPage() {
               setIsAddSheetOpen(true);
             }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-pencil"
-            >
-              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-              <path d="m15 5 4 4" />
-            </svg>
+            <FontAwesomeIcon icon={faPencil} className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
@@ -206,7 +198,7 @@ export default function CouponsPage() {
             className="text-red-500 hover:text-red-700"
             onClick={() => setCouponToDelete(coupon.id)}
           >
-            <Trash2 className="h-4 w-4" />
+            <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
           </Button>
         </div>
       ),
@@ -261,7 +253,7 @@ export default function CouponsPage() {
         </div>
         <div className="flex items-center gap-4">
           <Button onClick={() => setIsAddSheetOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+            <FontAwesomeIcon icon={faPlus} className="mr-2 h-4 w-4" />
             Add Coupon
           </Button>
         </div>

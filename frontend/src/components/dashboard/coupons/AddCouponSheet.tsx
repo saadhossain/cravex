@@ -32,8 +32,9 @@ import {
   useGetRestaurantsForFilterQuery,
   useUpdateCouponMutation,
 } from "@/store/api/adminApi";
+import { faCalendar, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -54,15 +55,7 @@ interface CouponFormData {
   validTo?: Date;
   maxUsageCount?: string;
   restaurantId?: string;
-  // restaurant?: {
-  //   id: string;
-  //   name: string;
-  // };
   menuItemId?: string;
-  // menuItem?: {
-  //   id: string;
-  //   name: string;
-  // };
   isActive: boolean;
 }
 
@@ -144,7 +137,7 @@ export function AddCouponSheet({
         // We might need a small timeout or just set it and hope the Query picks it up.
         // However, useGetDishesQuery depends on selectedRestaurantId which is watched.
         // So setting restaurantId above should trigger the query.
-        const mId = couponToEdit.menuItemId || couponToEdit.menuItem?.id;
+        const mId = couponToEdit.menuItemId;
         if (mId) {
           setValue("menuItemId", mId);
         }
@@ -323,7 +316,10 @@ export function AddCouponSheet({
                           !field.value && "text-muted-foreground",
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <FontAwesomeIcon
+                          icon={faCalendar}
+                          className="mr-2 h-4 w-4"
+                        />
                         {field.value ? (
                           format(field.value, "MMM d, yyyy")
                         ) : (
@@ -359,7 +355,10 @@ export function AddCouponSheet({
                           !field.value && "text-muted-foreground",
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <FontAwesomeIcon
+                          icon={faCalendar}
+                          className="mr-2 h-4 w-4"
+                        />
                         {field.value ? (
                           format(field.value, "MMM d, yyyy")
                         ) : (
@@ -501,7 +500,13 @@ export function AddCouponSheet({
 
           <SheetFooter>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && (
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  spin
+                  className="mr-2 h-4 w-4"
+                />
+              )}
               {couponToEdit ? "Update Coupon" : "Create Coupon"}
             </Button>
           </SheetFooter>
