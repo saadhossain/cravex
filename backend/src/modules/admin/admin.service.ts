@@ -1,6 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, MoreThanOrEqual, Repository } from 'typeorm';
+import {
+  DataSource,
+  FindOptionsWhere,
+  ILike,
+  In,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Coupon } from '../../domain/entities/coupon.entity';
 import { MenuItem } from '../../domain/entities/menu-item.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
@@ -13,6 +20,7 @@ import {
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
   AdminUsersQueryDto,
+  CreateAdminOrderDto,
   CreateCouponDto,
   DashboardStatsDto,
   OrdersByStatusDto,
@@ -39,6 +47,7 @@ export class AdminService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Coupon)
     private readonly couponRepository: Repository<Coupon>,
+    private readonly dataSource: DataSource,
   ) {}
 
   private getDateRange(period?: Period): { start: Date; end: Date } {
@@ -759,5 +768,110 @@ export class AdminService {
       throw new NotFoundException('Coupon not found');
     }
     return { message: 'Coupon deleted successfully' };
+  }
+  async createOrder(createOrderDto: CreateAdminOrderDto) {
+    const { userId, restaurantId, items, deliveryType, paymentMethod, note } =
+      createOrderDto;
+
+    // 1. Verify IDs
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id: restaurantId },
+    });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    // 2. Fetch dishes to get Prices
+    const menuItemIds = items.map((i) => i.menuItemId);
+    const dbMenuItems = await this.menuItemRepository.findBy({
+      id: In(menuItemIds),
+    });
+
+    if (dbMenuItems.length !== items.length) {
+      throw new NotFoundException('One or more menu items not found');
+    }
+
+    const menuItemMap = new Map(dbMenuItems.map((i) => [i.id, i]));
+
+    // 3. Calculate Totals
+    let subtotal = 0;
+    const orderItemsData: any[] = [];
+
+    for (const item of items) {
+      const dbItem = menuItemMap.get(item.menuItemId);
+      if (!dbItem) continue;
+
+      const price = Number(dbItem.price);
+      // Admin order options not implemented yet in DTO, assuming base price
+      const lineTotal = price * item.quantity;
+      subtotal += lineTotal;
+
+      orderItemsData.push({
+        menuItemName: dbItem.name,
+        menuItemId: dbItem.id,
+        price,
+        quantity: item.quantity,
+        totalPrice: lineTotal,
+      });
+    }
+
+    let deliveryFee = 0;
+    if (deliveryType === 'delivery') {
+      deliveryFee = Number(restaurant.deliveryFee || 0);
+      const minDelivery = Number(restaurant.minimumDelivery || 0);
+      if (subtotal < minDelivery) {
+        throw new Error(`Minimum order amount is ${minDelivery}`);
+      }
+    }
+
+    const total = subtotal + deliveryFee;
+
+    // 4. Transaction to Save
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const order = queryRunner.manager.create(Order, {
+        userId,
+        restaurantId,
+        status: 'pending',
+        total,
+        subtotal,
+        deliveryFee,
+        discount: 0,
+        deliveryType,
+        paymentMethod,
+        paymentStatus: createOrderDto.paymentStatus || 'pending',
+        specialInstructions: note,
+        orderNumber: `ORD-${Date.now().toString(36).toUpperCase()}-${Math.floor(
+          Math.random() * 1000,
+        )}`,
+      });
+
+      const savedOrder = await queryRunner.manager.save(order);
+
+      for (const itemData of orderItemsData) {
+        const orderItem = queryRunner.manager.create(OrderItem, {
+          orderId: savedOrder.id,
+          menuItemName: itemData.menuItemName,
+          menuItemId: itemData.menuItemId,
+          unitPrice: itemData.price,
+          quantity: itemData.quantity,
+          totalPrice: itemData.totalPrice,
+        });
+        await queryRunner.manager.save(orderItem);
+      }
+
+      await queryRunner.commitTransaction();
+
+      return { message: 'Order created successfully', orderId: savedOrder.id };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -267,6 +267,17 @@ export interface AdminCouponsResponse {
   };
 }
 
+export interface CreateAdminOrderPayload {
+  userId: string;
+  restaurantId: string;
+  items: { menuItemId: string; quantity: number }[];
+  deliveryType: "delivery" | "collection";
+  paymentMethod: "cash" | "card" | "cod";
+  paymentStatus?: string;
+  note?: string;
+  deliveryAddress?: string;
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
@@ -290,6 +301,14 @@ export const adminApi = apiSlice.injectEndpoints({
         params,
       }),
       providesTags: ["Order"],
+    }),
+    createAdminOrder: builder.mutation<void, CreateAdminOrderPayload>({
+      query: (body) => ({
+        url: "/admin/orders",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Order", "User", "Restaurant"],
     }),
     getRestaurantsForFilter: builder.query<RestaurantOption[], void>({
       query: () => "/admin/restaurants/list",
@@ -378,4 +397,5 @@ export const {
   useCreateCouponMutation,
   useUpdateCouponMutation,
   useDeleteCouponMutation,
+  useCreateAdminOrderMutation,
 } = adminApi;

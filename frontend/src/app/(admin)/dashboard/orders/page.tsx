@@ -7,8 +7,12 @@ import {
   SingleSelectFilter,
   TimePeriod,
 } from "@/components/dashboard";
+import { AddOrderSheet } from "@/components/dashboard/orders/AddOrderSheet";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useGetAdminOrdersQuery } from "@/store/api/adminApi";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   endOfDay,
   endOfMonth,
@@ -85,6 +89,7 @@ export default function OrdersPage() {
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC" | undefined>(
     undefined,
   );
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
 
   // Calculate date range based on period
   const getDateRange = (period: TimePeriod) => {
@@ -266,6 +271,12 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setIsAddSheetOpen(true)}>
+          <FontAwesomeIcon icon={faPlus} className="mr-2 h-4 w-4" />
+          Add Order
+        </Button>
+      </div>
       <DataTable
         title="Orders"
         data={(data?.data || []) as AdminOrder[]}
@@ -296,6 +307,7 @@ export default function OrdersPage() {
           </>
         }
       />
+      <AddOrderSheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen} />
     </div>
   );
 }

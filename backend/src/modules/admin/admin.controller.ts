@@ -19,6 +19,7 @@ import {
   AdminOrdersQueryDto,
   AdminRestaurantsQueryDto,
   AdminUsersQueryDto,
+  CreateAdminOrderDto,
   CreateCouponDto,
   DashboardStatsDto,
   PeriodQueryDto,
@@ -54,6 +55,12 @@ export class AdminController {
   @ApiOperation({ summary: 'Get all orders with filtering for superadmin' })
   async getOrders(@Query() query: AdminOrdersQueryDto) {
     return this.adminService.getOrders(query);
+  }
+
+  @Post('orders')
+  @ApiOperation({ summary: 'Create a new order for a user' })
+  async createOrder(@Body() createOrderDto: CreateAdminOrderDto) {
+    return this.adminService.createOrder(createOrderDto);
   }
 
   @Get('restaurants')
