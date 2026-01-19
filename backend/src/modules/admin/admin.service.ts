@@ -689,7 +689,7 @@ export class AdminService {
 
     const [coupons, total] = await this.couponRepository.findAndCount({
       where,
-      relations: ['restaurant'],
+      relations: ['restaurant', 'menuItem'],
       order: { [sortField]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
@@ -729,6 +729,28 @@ export class AdminService {
   async createCoupon(createCouponDto: CreateCouponDto) {
     const coupon = this.couponRepository.create(createCouponDto);
     return this.couponRepository.save(coupon);
+  }
+
+  async updateCoupon(id: string, updateCouponDto: CreateCouponDto) {
+    const coupon = await this.couponRepository.findOne({ where: { id } });
+    if (!coupon) {
+      throw new NotFoundException('Coupon not found');
+    }
+
+    // Explicitly handle fields that might be cleared
+    const updatedCoupon = this.couponRepository.merge(coupon, updateCouponDto);
+
+    // Handle relations if they are null in DTO but present in DB (clearing them)
+    if (!updateCouponDto.restaurantId) {
+      updatedCoupon.restaurant = null as any;
+      updatedCoupon.restaurantId = null as any;
+    }
+    if (!updateCouponDto.menuItemId) {
+      updatedCoupon.menuItem = null as any;
+      updatedCoupon.menuItemId = null as any;
+    }
+
+    return this.couponRepository.save(updatedCoupon);
   }
 
   async deleteCoupon(id: string) {

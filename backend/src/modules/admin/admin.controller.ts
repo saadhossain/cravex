@@ -103,6 +103,15 @@ export class AdminController {
     return this.adminService.createCoupon(createCouponDto);
   }
 
+  @Patch('coupons/:id')
+  @ApiOperation({ summary: 'Update a coupon' })
+  async updateCoupon(
+    @Param('id') id: string,
+    @Body() updateCouponDto: CreateCouponDto,
+  ) {
+    return this.adminService.updateCoupon(id, updateCouponDto);
+  }
+
   @Delete('coupons/:id')
   @ApiOperation({ summary: 'Delete a coupon' })
   async deleteCoupon(@Param('id') id: string) {
