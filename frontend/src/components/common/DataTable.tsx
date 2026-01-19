@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ReactNode } from "react";
+import TableSkeletonLoader from "../loader/table-skeleton-loader";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
 
@@ -72,19 +73,7 @@ export function DataTable<T extends { id: string | number }>(
   };
 
   if (isLoading) {
-    return (
-      <div className="bg-card border border-border rounded-xl p-4">
-        <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="h-16 bg-secondary animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
-      </div>
-    );
+    return <TableSkeletonLoader />;
   }
 
   return (

@@ -44,7 +44,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border hover:bg-accent transition-colors"
+      className="flex items-center gap-2 p-2.5 rounded-full bg-card border border-border hover:bg-accent transition-colors"
       title="Click to change"
     >
       <span className="text-foreground">{getIcon()}</span>

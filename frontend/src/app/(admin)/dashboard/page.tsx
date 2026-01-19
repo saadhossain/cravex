@@ -8,9 +8,9 @@ import {
   StatsCardCarousel,
   StatsCardSlide,
   TopSellingDishes,
-  type TopDish,
 } from "@/components/dashboard";
 import { StatsSummery } from "@/components/dashboard/StatsSummery";
+import DashboardSkeletonLoader from "@/components/loader/dashboard-skeleton-loader";
 import {
   useGetDashboardStatsQuery,
   useGetTopSellingDishesQuery,
@@ -26,77 +26,13 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-// Mock data for top selling dishes - replace with API call later
-const mockTopDishes: TopDish[] = [
-  {
-    id: "1",
-    name: "Cheese & Corn Momos",
-    price: 8.99,
-    orderCount: 156,
-    orderRate: 32,
-    isPositive: true,
-  },
-  {
-    id: "2",
-    name: "French Fry",
-    price: 4.99,
-    orderCount: 134,
-    orderRate: 24,
-    isPositive: true,
-  },
-  {
-    id: "3",
-    name: "Cheese Burger",
-    price: 12.99,
-    orderCount: 98,
-    orderRate: 18,
-    isPositive: true,
-  },
-  {
-    id: "4",
-    name: "Margherita Pizza",
-    price: 14.99,
-    orderCount: 87,
-    orderRate: 5,
-    isPositive: false,
-  },
-  {
-    id: "5",
-    name: "Chicken Wings",
-    price: 9.99,
-    orderCount: 76,
-    orderRate: 12,
-    isPositive: true,
-  },
-];
-
 export default function AdminDashboardPage() {
   const { data: stats, isLoading, error } = useGetDashboardStatsQuery();
   const { data: topDishesData, isLoading: topDishesLoading } =
     useGetTopSellingDishesQuery();
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        {/* Stats Cards Skeleton */}
-        <div className="flex gap-4 overflow-hidden">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="shrink-0 w-[calc(16.666%-13px)] h-32 bg-card rounded-xl animate-pulse"
-            />
-          ))}
-        </div>
-        {/* Charts Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-card rounded-xl animate-pulse" />
-          <div className="h-80 bg-card rounded-xl animate-pulse" />
-        </div>
-        {/* Table Skeleton */}
-        <div className="h-96 bg-card rounded-xl animate-pulse" />
-      </div>
-    );
+    return <DashboardSkeletonLoader />;
   }
 
   if (error || !stats) {
