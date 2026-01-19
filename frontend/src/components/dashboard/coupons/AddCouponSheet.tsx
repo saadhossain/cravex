@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,19 +26,22 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
+  Coupon,
   useCreateCouponMutation,
   useGetDishesQuery,
   useGetRestaurantsForFilterQuery,
+  useUpdateCouponMutation,
 } from "@/store/api/adminApi";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 interface AddCouponSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  couponToEdit?: Coupon | null;
 }
 
 interface CouponFormData {
@@ -53,14 +54,29 @@ interface CouponFormData {
   validTo?: Date;
   maxUsageCount?: string;
   restaurantId?: string;
+  // restaurant?: {
+  //   id: string;
+  //   name: string;
+  // };
   menuItemId?: string;
+  // menuItem?: {
+  //   id: string;
+  //   name: string;
+  // };
   isActive: boolean;
 }
 
-export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
-  const [createCoupon, { isLoading }] = useCreateCouponMutation();
+export function AddCouponSheet({
+  open,
+  onOpenChange,
+  couponToEdit,
+}: AddCouponSheetProps) {
+  const [createCoupon, { isLoading: isCreating }] = useCreateCouponMutation();
+  const [updateCoupon, { isLoading: isUpdating }] = useUpdateCouponMutation();
   const { data: restaurants } = useGetRestaurantsForFilterQuery();
   const [scope, setScope] = useState<"restaurant" | "food">("restaurant");
+
+  const isLoading = isCreating || isUpdating;
 
   const {
     register,
@@ -80,6 +96,78 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
   const discountType = watch("discountType");
   const selectedRestaurantId = watch("restaurantId");
 
+  // Effect to populate form when couponToEdit changes
+  useEffect(() => {
+    if (open) {
+      if (couponToEdit) {
+        // Determine scope
+        const newScope = couponToEdit.menuItemId ? "food" : "restaurant";
+        setScope(newScope);
+
+        setValue("code", couponToEdit.code);
+        setValue("discountType", couponToEdit.discountType);
+        setValue("discountValue", couponToEdit.discountValue.toString());
+        setValue(
+          "minimumOrder",
+          couponToEdit.minimumOrder ? couponToEdit.minimumOrder.toString() : "",
+        );
+        setValue(
+          "maxDiscount",
+          couponToEdit.maxDiscount ? couponToEdit.maxDiscount.toString() : "",
+        );
+        setValue(
+          "validFrom",
+          couponToEdit.validFrom ? new Date(couponToEdit.validFrom) : undefined,
+        );
+        setValue(
+          "validTo",
+          couponToEdit.validTo ? new Date(couponToEdit.validTo) : undefined,
+        );
+        setValue(
+          "maxUsageCount",
+          couponToEdit.maxUsageCount
+            ? couponToEdit.maxUsageCount.toString()
+            : "",
+        );
+        setValue("isActive", couponToEdit.isActive);
+
+        // Handle relations
+        const rId = couponToEdit.restaurantId || couponToEdit.restaurant?.id;
+        if (rId) {
+          setValue("restaurantId", rId);
+        } else {
+          setValue("restaurantId", "all");
+        }
+
+        // For food items we need to wait for dishes data or just set it if available
+        // But since we fetch dishes based on restaurantId, setting restaurantId first is key.
+        // We might need a small timeout or just set it and hope the Query picks it up.
+        // However, useGetDishesQuery depends on selectedRestaurantId which is watched.
+        // So setting restaurantId above should trigger the query.
+        const mId = couponToEdit.menuItemId || couponToEdit.menuItem?.id;
+        if (mId) {
+          setValue("menuItemId", mId);
+        }
+      } else {
+        // Reset form for adding new coupon
+        reset({
+          code: "",
+          discountType: "percentage",
+          discountValue: "",
+          minimumOrder: "",
+          maxDiscount: "",
+          validFrom: undefined,
+          validTo: undefined,
+          maxUsageCount: "",
+          restaurantId: undefined,
+          menuItemId: undefined,
+          isActive: true,
+        });
+        setScope("restaurant");
+      }
+    }
+  }, [open, couponToEdit, reset, setValue]);
+
   const { data: dishesData } = useGetDishesQuery(
     {
       restaurantId:
@@ -97,7 +185,8 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
   const onSubmit = async (data: CouponFormData) => {
     try {
       const payload = {
-        ...data,
+        code: data.code,
+        discountType: data.discountType,
         discountValue: Number(data.discountValue),
         minimumOrder: data.minimumOrder ? Number(data.minimumOrder) : undefined,
         maxDiscount: data.maxDiscount ? Number(data.maxDiscount) : undefined,
@@ -109,19 +198,25 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
         menuItemId: scope === "food" ? data.menuItemId : undefined,
         validFrom: data.validFrom ? data.validFrom.toISOString() : undefined,
         validTo: data.validTo ? data.validTo.toISOString() : undefined,
+        isActive: data.isActive,
       };
 
-      await createCoupon(payload).unwrap();
+      if (couponToEdit) {
+        await updateCoupon({ id: couponToEdit.id, data: payload }).unwrap();
+        toast.success("Coupon updated successfully");
+      } else {
+        await createCoupon(payload).unwrap();
+        toast.success("Coupon created successfully");
+      }
 
-      toast.success("Coupon created successfully");
       reset();
       setScope("restaurant");
       onOpenChange(false);
     } catch (error: any) {
       toast.error(
-        error?.data?.message || error?.message || "Failed to create coupon",
+        error?.data?.message || error?.message || "Failed to save coupon",
       );
-      console.error("Create coupon error:", error);
+      console.error("Save coupon error:", error);
     }
   };
 
@@ -129,9 +224,13 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto w-[400px] sm:w-[540px]">
         <SheetHeader>
-          <SheetTitle>Add New Coupon</SheetTitle>
+          <SheetTitle>
+            {couponToEdit ? "Edit Coupon" : "Add New Coupon"}
+          </SheetTitle>
           <SheetDescription>
-            Create a new coupon code for discounts.
+            {couponToEdit
+              ? "Update existing coupon details."
+              : "Create a new coupon code for discounts."}
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -153,7 +252,7 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
             <div className="space-y-2">
               <Label htmlFor="discountType">Discount Type</Label>
               <Select
-                defaultValue="percentage"
+                value={discountType}
                 onValueChange={(val) =>
                   setValue("discountType", val as "percentage" | "fixed")
                 }
@@ -309,8 +408,8 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
               <TabsContent value="restaurant" className="space-y-2 pt-2">
                 <Label htmlFor="restaurantId">Restaurant (Optional)</Label>
                 <Select
+                  value={watch("restaurantId") || "all"}
                   onValueChange={(val) => setValue("restaurantId", val)}
-                  defaultValue={watch("restaurantId")}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select restaurant (or site-wide)" />
@@ -337,11 +436,11 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
                     Select Restaurant <span className="text-red-500">*</span>
                   </Label>
                   <Select
+                    value={watch("restaurantId")}
                     onValueChange={(val) => {
                       setValue("restaurantId", val);
                       setValue("menuItemId", ""); // Reset dish when restaurant changes
                     }}
-                    defaultValue={watch("restaurantId")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a restaurant first" />
@@ -361,6 +460,7 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
                     Select Food Item <span className="text-red-500">*</span>
                   </Label>
                   <Select
+                    value={watch("menuItemId")}
                     onValueChange={(val) => setValue("menuItemId", val)}
                     disabled={
                       !selectedRestaurantId || selectedRestaurantId === "all"
@@ -391,7 +491,7 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
           <div className="flex items-center space-x-2 pt-2">
             <Checkbox
               id="isActive"
-              defaultChecked={true}
+              checked={watch("isActive")}
               onCheckedChange={(checked) =>
                 setValue("isActive", checked as boolean)
               }
@@ -402,7 +502,7 @@ export function AddCouponSheet({ open, onOpenChange }: AddCouponSheetProps) {
           <SheetFooter>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Coupon
+              {couponToEdit ? "Update Coupon" : "Create Coupon"}
             </Button>
           </SheetFooter>
         </form>

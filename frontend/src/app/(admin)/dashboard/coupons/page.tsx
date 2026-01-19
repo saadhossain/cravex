@@ -55,6 +55,7 @@ export default function CouponsPage() {
   const [isActive, setIsActive] = useState<boolean | undefined>(undefined);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [couponToDelete, setCouponToDelete] = useState<string | null>(null);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
 
   const { data, isLoading } = useGetCouponsQuery({
     page,
@@ -173,14 +174,41 @@ export default function CouponsPage() {
     {
       header: "Actions",
       cell: (coupon) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-red-500 hover:text-red-700"
-          onClick={() => setCouponToDelete(coupon.id)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-blue-500 hover:text-blue-700"
+            onClick={() => {
+              setEditingCoupon(coupon);
+              setIsAddSheetOpen(true);
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-pencil"
+            >
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
+            </svg>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-red-500 hover:text-red-700"
+            onClick={() => setCouponToDelete(coupon.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -255,7 +283,14 @@ export default function CouponsPage() {
         filters={null}
       />
 
-      <AddCouponSheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen} />
+      <AddCouponSheet
+        open={isAddSheetOpen}
+        onOpenChange={(open) => {
+          setIsAddSheetOpen(open);
+          if (!open) setEditingCoupon(null);
+        }}
+        couponToEdit={editingCoupon}
+      />
 
       <AlertDialog
         open={!!couponToDelete}

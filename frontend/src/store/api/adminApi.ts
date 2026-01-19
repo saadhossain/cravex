@@ -235,6 +235,7 @@ export interface CreateCouponPayload {
   validTo?: string;
   maxUsageCount?: number;
   restaurantId?: string;
+  menuItemId?: string;
   isActive?: boolean;
 }
 
@@ -252,6 +253,7 @@ export interface Coupon {
   isActive: boolean;
   restaurantId?: string;
   restaurant?: { id: string; name: string };
+  menuItemId?: string;
   createdAt: string;
 }
 
@@ -342,6 +344,17 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Coupon"],
     }),
+    updateCoupon: builder.mutation<
+      void,
+      { id: string; data: CreateCouponPayload }
+    >({
+      query: ({ id, data }) => ({
+        url: `/admin/coupons/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Coupon"],
+    }),
     deleteCoupon: builder.mutation<void, string>({
       query: (id) => ({
         url: `/admin/coupons/${id}`,
@@ -363,5 +376,6 @@ export const {
   useUpdateUserStatusMutation,
   useGetCouponsQuery,
   useCreateCouponMutation,
+  useUpdateCouponMutation,
   useDeleteCouponMutation,
 } = adminApi;
