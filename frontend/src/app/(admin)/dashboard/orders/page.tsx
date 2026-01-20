@@ -9,8 +9,18 @@ import {
 } from "@/components/dashboard";
 import { AddOrderSheet } from "@/components/dashboard/orders/AddOrderSheet";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useGetAdminOrdersQuery } from "@/store/api/adminApi";
+import {
+  useGetAdminOrdersQuery,
+  useUpdateOrderMutation,
+} from "@/store/api/adminApi";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,9 +32,10 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface AdminOrder {
   id: string;
@@ -90,6 +101,21 @@ export default function OrdersPage() {
     undefined,
   );
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [updateOrder] = useUpdateOrderMutation();
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      if (search) setPage(1); // Reset page when search applies
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Calculate date range based on period
   const getDateRange = (period: TimePeriod) => {
@@ -128,6 +154,7 @@ export default function OrdersPage() {
     endDate,
     sortBy,
     sortOrder,
+    search: debouncedSearch || undefined,
   });
 
   const handlePeriodChange = (newPeriod: string) => {
@@ -256,29 +283,91 @@ export default function OrdersPage() {
         </button>
       ),
       cell: (order) => (
-        <span
-          className={cn(
-            "inline-flex px-2.5 py-1 rounded-full text-xs font-medium border",
-            statusStyles[order.status] ||
-              "bg-muted text-muted-foreground border-border",
-          )}
+        <Select
+          defaultValue={order.status}
+          onValueChange={async (newStatus) => {
+            try {
+              await updateOrder({
+                id: order.id,
+                data: { status: newStatus },
+              }).unwrap();
+              toast.success(`Order status updated to ${newStatus}`);
+            } catch (error) {
+              toast.error("Failed to update status");
+            }
+          }}
         >
-          {statusLabels[order.status] || order.status}
-        </span>
+          <SelectTrigger
+            className={cn(
+              "h-8 w-[140px] border-none",
+              statusStyles[order.status] || "bg-muted text-muted-foreground",
+            )}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ),
+    },
+    {
+      id: "actions",
+      cell: (order) => {
+        return (
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={() => {
+              setEditingOrderId(order.id);
+              setIsAddSheetOpen(true);
+            }}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+          </Button>
+        );
+      },
     },
   ];
 
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setIsAddSheetOpen(true)}>
+      <div className="flex justify-between mb-4">
+        <div className="w-4/5 flex gap-4 items-center">
+          <input
+            placeholder="Search orders..."
+            className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <SingleSelectFilter
+            label="Period"
+            options={periodOptions}
+            value={period}
+            onChange={handlePeriodChange}
+          />
+          <MultiSelectFilter
+            label="Status"
+            options={statusOptions}
+            selectedValues={status}
+            onFilterChange={handleStatusFilter}
+          />
+        </div>
+        <Button
+          onClick={() => {
+            setEditingOrderId(null);
+            setIsAddSheetOpen(true);
+          }}
+        >
           <FontAwesomeIcon icon={faPlus} className="mr-2 h-4 w-4" />
           Add Order
         </Button>
       </div>
       <DataTable
-        title="Orders"
         data={(data?.data || []) as AdminOrder[]}
         columns={columns}
         isLoading={isLoading}
@@ -290,24 +379,15 @@ export default function OrdersPage() {
           setLimit(newLimit);
           setPage(1);
         }}
-        filters={
-          <>
-            <SingleSelectFilter
-              label="Period"
-              options={periodOptions}
-              value={period}
-              onChange={handlePeriodChange}
-            />
-            <MultiSelectFilter
-              label="Status"
-              options={statusOptions}
-              selectedValues={status}
-              onFilterChange={handleStatusFilter}
-            />
-          </>
-        }
       />
-      <AddOrderSheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen} />
+      <AddOrderSheet
+        open={isAddSheetOpen}
+        onOpenChange={(open) => {
+          setIsAddSheetOpen(open);
+          if (!open) setEditingOrderId(null);
+        }}
+        orderToEdit={editingOrderId}
+      />
     </div>
   );
 }

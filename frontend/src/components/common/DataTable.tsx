@@ -11,7 +11,8 @@ const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
  * Interface definition for a single column in the DataTable
  */
 export interface ColumnDef<T> {
-  header:
+  id?: string;
+  header?:
     | ReactNode
     | ((props: {
         sort: (direction: "asc" | "desc" | null) => void;
@@ -56,7 +57,6 @@ export function DataTable<T extends { id: string | number }>(
     columns,
     isLoading,
     filters,
-    title = "Details",
     page = 1,
     itemsPerPage = 10,
     totalCount = 0,
@@ -78,18 +78,6 @@ export function DataTable<T extends { id: string | number }>(
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">
-      {/* Header with Title and Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {totalCount} items
-            {totalPages > 1 && ` • Page ${page} of ${totalPages}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">{filters}</div>
-      </div>
-
       {/* Table Content */}
       <div className="overflow-auto h-[calc(100vh-320px)] min-h-[400px] relative">
         <table className="w-full relative">

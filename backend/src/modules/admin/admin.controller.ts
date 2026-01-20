@@ -24,6 +24,7 @@ import {
   DashboardStatsDto,
   PeriodQueryDto,
   TopSellingDishesResponseDto,
+  UpdateAdminOrderDto,
   UpdateUserStatusDto,
 } from './dto';
 
@@ -61,6 +62,21 @@ export class AdminController {
   @ApiOperation({ summary: 'Create a new order for a user' })
   async createOrder(@Body() createOrderDto: CreateAdminOrderDto) {
     return this.adminService.createOrder(createOrderDto);
+  }
+
+  @Get('orders/:id')
+  @ApiOperation({ summary: 'Get order details by ID' })
+  async getOrder(@Param('id') id: string) {
+    return this.adminService.getOrder(id);
+  }
+
+  @Patch('orders/:id')
+  @ApiOperation({ summary: 'Update an order' })
+  async updateOrder(
+    @Param('id') id: string,
+    @Body() updateOrderDto: UpdateAdminOrderDto,
+  ) {
+    return this.adminService.updateOrder(id, updateOrderDto);
   }
 
   @Get('restaurants')

@@ -64,4 +64,20 @@ export class CreateAdminOrderDto {
   @IsOptional()
   @IsString()
   deliveryAddress?: string;
+
+  @ApiPropertyOptional({
+    description: 'Order status',
+    enum: [
+      'pending',
+      'confirmed',
+      'preparing',
+      'ready',
+      'out_for_delivery',
+      'delivered',
+      'cancelled',
+    ],
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

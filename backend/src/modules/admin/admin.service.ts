@@ -803,7 +803,6 @@ export class AdminService {
       if (!dbItem) continue;
 
       const price = Number(dbItem.price);
-      // Admin order options not implemented yet in DTO, assuming base price
       const lineTotal = price * item.quantity;
       subtotal += lineTotal;
 
@@ -867,6 +866,143 @@ export class AdminService {
       await queryRunner.commitTransaction();
 
       return { message: 'Order created successfully', orderId: savedOrder.id };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getOrder(id: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['restaurant', 'user', 'items', 'items.menuItem'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return order;
+  }
+
+  async updateOrder(id: string, updateOrderDto: any) {
+    // Note: using any for DTO temporarily to avoid import loops if strict typing issues,
+    // but ideally use UpdateAdminOrderDto.
+    const {
+      userId,
+      restaurantId,
+      items,
+      deliveryType,
+      paymentMethod,
+      paymentStatus,
+      note,
+      status, // Allow status update
+    } = updateOrderDto;
+
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['restaurant', 'items'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Update basic fields if provided
+      if (userId) order.userId = userId;
+      if (restaurantId) order.restaurantId = restaurantId;
+      if (deliveryType) order.deliveryType = deliveryType;
+      if (paymentMethod) order.paymentMethod = paymentMethod;
+      if (paymentStatus) order.paymentStatus = paymentStatus;
+      if (note !== undefined) order.specialInstructions = note;
+      if (status) order.status = status;
+
+      // 2. Handle Items Update (Full Replacement if items array is provided)
+      if (items && items.length > 0) {
+        // We need to fetch menu items to recalculate totals
+        const menuItemIds = items.map((i: any) => i.menuItemId);
+        const dbMenuItems = await this.menuItemRepository.findBy({
+          id: In(menuItemIds),
+        });
+
+        const menuItemMap = new Map(dbMenuItems.map((i) => [i.id, i]));
+        let subtotal = 0;
+        const newOrderItems: OrderItem[] = [];
+
+        // Delete existing items
+        await queryRunner.manager.delete(OrderItem, { orderId: id });
+
+        for (const item of items) {
+          const dbItem = menuItemMap.get(item.menuItemId);
+          // If item not found (maybe deleted?), skip or throw. Let's skip safely.
+          if (!dbItem) continue;
+
+          const price = Number(dbItem.price);
+          const lineTotal = price * item.quantity;
+          subtotal += lineTotal;
+
+          const orderItem = queryRunner.manager.create(OrderItem, {
+            order: order, // Pass the order entity to establish relation
+            menuItemName: dbItem.name,
+            menuItemId: dbItem.id,
+            unitPrice: price,
+            quantity: item.quantity,
+            totalPrice: lineTotal,
+          });
+          newOrderItems.push(orderItem);
+        }
+
+        order.subtotal = subtotal;
+
+        // Recalculate delivery fee if type/restaurant changed or subtotal changed
+        // Use provided restaurantId or existing order.restaurantId
+        const activeRestaurantId = restaurantId || order.restaurantId;
+        const activeDeliveryType = deliveryType || order.deliveryType;
+
+        let restaurant = order.restaurant;
+        if (restaurantId && restaurantId !== order.restaurantId) {
+          restaurant = (await this.restaurantRepository.findOne({
+            where: { id: restaurantId },
+          })) as Restaurant;
+        }
+
+        let deliveryFee = 0;
+        if (activeDeliveryType === 'delivery' && restaurant) {
+          deliveryFee = Number(restaurant.deliveryFee || 0);
+          const minDelivery = Number(restaurant.minimumDelivery || 0);
+          // Optional: enforce min delivery on update? Probably yes.
+          if (subtotal < minDelivery) {
+            throw new Error(`Minimum order amount is ${minDelivery}`);
+          }
+        }
+        order.deliveryFee = deliveryFee;
+        order.total = subtotal + deliveryFee - (Number(order.discount) || 0);
+
+        // Update items relation to new items so TypeORM knows about them
+        // and doesn't try to mess with the old deleted ones that were in memory
+        order.items = newOrderItems;
+
+        // No need to manually save newItems because cascade: true,
+        // saving 'order' will save 'items'
+      } else if (items && items.length === 0) {
+        // Clear items?
+        throw new Error('Order must have at least one item');
+      }
+
+      // If only status/payment changed, no need to recalc totals unless we want to be super safe.
+      // But if items changed, we already updated totals above.
+
+      await queryRunner.manager.save(order);
+      await queryRunner.commitTransaction();
+
+      return { message: 'Order updated successfully' };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;

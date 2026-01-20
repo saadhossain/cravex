@@ -135,7 +135,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
       <div className="flex justify-between">
-        <div className="w-3/4 flex gap-4">
+        <div className="w-4/5 flex gap-4">
           <input
             placeholder="Search users..."
             className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"

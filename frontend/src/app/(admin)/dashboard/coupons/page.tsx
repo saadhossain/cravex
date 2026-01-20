@@ -216,10 +216,10 @@ export default function CouponsPage() {
   return (
     <div className="space-y-6 p-4 md:p-6 overflow-x-hidden">
       <div className="w-full flex justify-between">
-        <div className="flex gap-4 w-3/4">
+        <div className="flex gap-4 w-4/5">
           <input
             placeholder="Search by code..."
-            className="px-3 py-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"
+            className="p-2 border border-border rounded-lg bg-background text-sm w-full max-w-xs focus:ring-2 focus:ring-primary focus:outline-none"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);

@@ -276,6 +276,7 @@ export interface CreateAdminOrderPayload {
   paymentStatus?: string;
   note?: string;
   deliveryAddress?: string;
+  status?: string;
 }
 
 export const adminApi = apiSlice.injectEndpoints({
@@ -381,6 +382,21 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Coupon"],
     }),
+    getOrder: builder.query<any, string>({
+      query: (id) => `/admin/orders/${id}`,
+      providesTags: (result, error, id) => [{ type: "Order", id }],
+    }),
+    updateOrder: builder.mutation<
+      void,
+      { id: string; data: Partial<CreateAdminOrderPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/admin/orders/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Order", "User", "Restaurant"],
+    }),
   }),
 });
 
@@ -398,4 +414,6 @@ export const {
   useUpdateCouponMutation,
   useDeleteCouponMutation,
   useCreateAdminOrderMutation,
+  useGetOrderQuery,
+  useUpdateOrderMutation,
 } = adminApi;
