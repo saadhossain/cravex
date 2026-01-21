@@ -110,6 +110,14 @@ export class CreateRestaurantDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiPropertyOptional({
+    example: 'https://example.com/logo.jpg',
+    description: 'The logo URL of the restaurant',
+  })
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
 }
 
 export class UpdateRestaurantDto extends CreateRestaurantDto {}

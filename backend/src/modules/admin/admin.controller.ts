@@ -20,11 +20,13 @@ import {
   AdminRestaurantsQueryDto,
   AdminUsersQueryDto,
   CreateAdminOrderDto,
+  CreateAdminRestaurantDto,
   CreateCouponDto,
   DashboardStatsDto,
   PeriodQueryDto,
   TopSellingDishesResponseDto,
   UpdateAdminOrderDto,
+  UpdateAdminRestaurantDto,
   UpdateUserStatusDto,
 } from './dto';
 
@@ -91,6 +93,29 @@ export class AdminController {
   @ApiOperation({ summary: 'Get restaurants list for filter dropdown' })
   async getRestaurantsForFilter() {
     return this.adminService.getRestaurantsForFilter();
+  }
+
+  @Post('restaurants')
+  @ApiOperation({ summary: 'Create a new restaurant' })
+  async createRestaurant(
+    @Body() createRestaurantDto: CreateAdminRestaurantDto,
+  ) {
+    return this.adminService.createRestaurant(createRestaurantDto);
+  }
+
+  @Patch('restaurants/:id')
+  @ApiOperation({ summary: 'Update a restaurant' })
+  async updateRestaurant(
+    @Param('id') id: string,
+    @Body() updateRestaurantDto: UpdateAdminRestaurantDto,
+  ) {
+    return this.adminService.updateRestaurant(id, updateRestaurantDto);
+  }
+
+  @Delete('restaurants/:id')
+  @ApiOperation({ summary: 'Delete a restaurant' })
+  async deleteRestaurant(@Param('id') id: string) {
+    return this.adminService.deleteRestaurant(id);
   }
 
   @Get('dishes')

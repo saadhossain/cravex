@@ -5,22 +5,26 @@ import {
   DataTable,
   SingleSelectFilter,
 } from "@/components/dashboard";
+import { AddRestaurantSheet } from "@/components/dashboard/restaurants/AddRestaurantSheet";
+import { EditRestaurantSheet } from "@/components/dashboard/restaurants/EditRestaurantSheet";
 import { Button } from "@/components/ui/button";
-import { useGetRestaurantsQuery } from "@/store/api/adminApi";
+import {
+  AdminRestaurant,
+  useDeleteRestaurantMutation,
+  useGetRestaurantsQuery,
+} from "@/store/api/adminApi";
 import { format } from "date-fns";
-import { ArrowUpDown, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Edit,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-
-interface AdminRestaurant {
-  id: string;
-  name: string;
-  description?: string;
-  isActive: boolean;
-  rating?: number;
-  logoUrl?: string;
-  createdAt: string;
-}
+import { toast } from "sonner";
 
 export default function RestaurantsPage() {
   const [page, setPage] = useState(1);
@@ -31,6 +35,12 @@ export default function RestaurantsPage() {
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC" | undefined>(
     undefined,
   );
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [editingRestaurant, setEditingRestaurant] =
+    useState<AdminRestaurant | null>(null);
+
+  const [deleteRestaurant] = useDeleteRestaurantMutation();
 
   const { data, isLoading } = useGetRestaurantsQuery({
     page,
@@ -45,6 +55,22 @@ export default function RestaurantsPage() {
     sortBy,
     sortOrder,
   });
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this restaurant?")) {
+      try {
+        await deleteRestaurant(id).unwrap();
+        toast.success("Restaurant deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete restaurant");
+      }
+    }
+  };
+
+  const handleEdit = (restaurant: AdminRestaurant) => {
+    setEditingRestaurant(restaurant);
+    setIsEditSheetOpen(true);
+  };
 
   const columns: ColumnDef<AdminRestaurant>[] = [
     {
@@ -155,6 +181,29 @@ export default function RestaurantsPage() {
       accessorKey: "createdAt",
       cell: (r) => format(new Date(r.createdAt), "MMM d, yyyy"),
     },
+    {
+      header: "Actions",
+      cell: (r) => (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleEdit(r)}
+            className="h-8 w-8 hover:bg-muted"
+          >
+            <Edit className="h-4 w-4 text-blue-500" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDelete(r.id)}
+            className="h-8 w-8 hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   const handleSort = (field: string, direction: "asc" | "desc" | null) => {
@@ -196,7 +245,7 @@ export default function RestaurantsPage() {
           />
         </div>
         <div className="flex items-center gap-4">
-          <Button>
+          <Button onClick={() => setIsAddSheetOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Restaurant
           </Button>
@@ -215,6 +264,15 @@ export default function RestaurantsPage() {
           setLimit(newLimit);
           setPage(1);
         }}
+      />
+      <AddRestaurantSheet
+        open={isAddSheetOpen}
+        onOpenChange={setIsAddSheetOpen}
+      />
+      <EditRestaurantSheet
+        open={isEditSheetOpen}
+        onOpenChange={setIsEditSheetOpen}
+        restaurant={editingRestaurant}
       />
     </div>
   );

@@ -134,6 +134,12 @@ export interface AdminRestaurant {
   logoUrl?: string;
   createdAt: string;
   // Add other fields as needed
+  owner?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export interface AdminRestaurantsResponse {
@@ -279,6 +285,28 @@ export interface CreateAdminOrderPayload {
   status?: string;
 }
 
+export interface CreateRestaurantPayload {
+  name: string;
+  address: string;
+  ownerId?: string;
+  newOwner?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    password: string;
+  };
+  minimumDelivery: number;
+  deliveryFee: number;
+  deliveryTimeMinutes: number;
+  description?: string;
+  phone?: string;
+  email?: string;
+  latitude?: number;
+  longitude?: number;
+  logoUrl?: string;
+}
+
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
@@ -324,6 +352,14 @@ export const adminApi = apiSlice.injectEndpoints({
         params,
       }),
       providesTags: ["Restaurant"],
+    }),
+    createRestaurant: builder.mutation<void, CreateRestaurantPayload>({
+      query: (body) => ({
+        url: "/admin/restaurants",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Restaurant"],
     }),
     getDishes: builder.query<AdminDishesResponse, AdminDishesQuery>({
       query: (params) => ({
@@ -397,6 +433,24 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Order", "User", "Restaurant"],
     }),
+    updateRestaurant: builder.mutation<
+      void,
+      { id: string; data: Partial<CreateRestaurantPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/admin/restaurants/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Restaurant"],
+    }),
+    deleteRestaurant: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/restaurants/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Restaurant"],
+    }),
   }),
 });
 
@@ -416,4 +470,7 @@ export const {
   useCreateAdminOrderMutation,
   useGetOrderQuery,
   useUpdateOrderMutation,
+  useCreateRestaurantMutation,
+  useUpdateRestaurantMutation,
+  useDeleteRestaurantMutation,
 } = adminApi;

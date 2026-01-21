@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import {
   DataSource,
   FindOptionsWhere,
@@ -21,6 +22,7 @@ import {
   AdminRestaurantsQueryDto,
   AdminUsersQueryDto,
   CreateAdminOrderDto,
+  CreateAdminRestaurantDto,
   CreateCouponDto,
   DashboardStatsDto,
   OrdersByStatusDto,
@@ -462,8 +464,9 @@ export class AdminService {
       sortOrder = 'DESC',
     } = query;
 
-    const queryBuilder =
-      this.restaurantRepository.createQueryBuilder('restaurant');
+    const queryBuilder = this.restaurantRepository
+      .createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.owner', 'owner');
 
     if (search) {
       queryBuilder.andWhere('restaurant.name ILIKE :search', {
@@ -487,7 +490,13 @@ export class AdminService {
     const [restaurants, total] = await queryBuilder.getManyAndCount();
 
     return {
-      data: restaurants,
+      data: restaurants.map((r) => {
+        if (r.owner) {
+          const { password, refreshToken, ...ownerWithoutPassword } = r.owner;
+          r.owner = ownerWithoutPassword as any;
+        }
+        return r;
+      }),
       meta: {
         total,
         page,
@@ -1009,5 +1018,101 @@ export class AdminService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  private generateSlug(name: string): string {
+    return (
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '') +
+      '-' +
+      Math.floor(Math.random() * 10000)
+    );
+  }
+
+  async createRestaurant(dto: CreateAdminRestaurantDto) {
+    const { ownerId, newOwner, ...restaurantData } = dto;
+
+    let owner: User;
+
+    if (newOwner) {
+      // Check if user exists
+      const existingUser = await this.userRepository.findOne({
+        where: { email: newOwner.email },
+      });
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
+
+      const hashedPassword = await bcrypt.hash(newOwner.password, 10);
+
+      owner = this.userRepository.create({
+        email: newOwner.email,
+        password: hashedPassword,
+        firstName: newOwner.firstName,
+        lastName: newOwner.lastName,
+        phone: newOwner.phone,
+        role: 'restaurant',
+        isActive: true, // Auto activate? Or wait for email verification?
+        isEmailVerified: true, // Assuming admin created means verified
+      });
+
+      await this.userRepository.save(owner);
+    } else if (ownerId) {
+      const foundOwner = await this.userRepository.findOne({
+        where: { id: ownerId },
+      });
+      if (!foundOwner) {
+        throw new NotFoundException('Owner not found');
+      }
+      owner = foundOwner;
+
+      if (owner.role !== 'superadmin' && owner.role !== 'restaurant') {
+        owner.role = 'restaurant';
+        await this.userRepository.save(owner);
+      }
+    } else {
+      throw new Error('Either ownerId or newOwner must be provided');
+    }
+
+    const restaurant = this.restaurantRepository.create({
+      ...restaurantData,
+      owner,
+      ownerId: owner.id,
+      slug: this.generateSlug(dto.name),
+      isActive: true,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      logoUrl: dto.logoUrl,
+    });
+
+    return this.restaurantRepository.save(restaurant);
+  }
+
+  async updateRestaurant(id: string, dto: Partial<CreateAdminRestaurantDto>) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id },
+    });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    const { ownerId, newOwner, ...updateData } = dto;
+
+    // Handle owner update if provided (only if not readonly logic applied in frontend, but backend should support it if sent)
+    // However, user requirement says admin info won't be changeable.
+    // So we might ignore ownerId/newOwner updates here or handle them if we want to be flexible.
+    // For now, let's just update restaurant fields.
+
+    Object.assign(restaurant, updateData);
+
+    return this.restaurantRepository.save(restaurant);
+  }
+
+  async deleteRestaurant(id: string) {
+    const result = await this.restaurantRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    return { message: 'Restaurant deleted successfully' };
   }
 }
