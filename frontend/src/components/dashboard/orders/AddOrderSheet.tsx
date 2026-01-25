@@ -115,39 +115,40 @@ export function AddOrderSheet({
     name: "items",
   });
 
-  // Populate form when editing
+  // Reset form when opening for a new order (no orderToEdit)
   useEffect(() => {
-    if (open) {
-      if (orderToEdit && orderData) {
-        reset({
-          userId: orderData.userId || orderData.user?.id || "",
-          restaurantId:
-            orderData.restaurantId || orderData.restaurant?.id || "",
-          deliveryType: orderData.deliveryType,
-          paymentMethod: orderData.paymentMethod || "cod",
-          paymentStatus: orderData.paymentStatus || "pending",
-          status: orderData.status,
-          note: orderData.specialInstructions || "",
-          items:
-            orderData.items?.map((item: any) => ({
-              menuItemId: item.menuItemId || item.menuItem?.id,
-              quantity: Number(item.quantity),
-            })) || [],
-        });
-      } else if (!orderToEdit) {
-        // Reset for new order
-        reset({
-          userId: "",
-          restaurantId: "",
-          items: [{ menuItemId: "", quantity: 1 }],
-          deliveryType: "delivery",
-          paymentMethod: "cod",
-          paymentStatus: "pending",
-          note: "",
-        });
-      }
+    if (open && !orderToEdit) {
+      reset({
+        userId: "",
+        restaurantId: "",
+        items: [{ menuItemId: "", quantity: 1 }],
+        deliveryType: "delivery",
+        paymentMethod: "cod",
+        paymentStatus: "pending",
+        note: "",
+      });
     }
-  }, [open, orderToEdit, orderData, reset]);
+  }, [open, orderToEdit, reset]);
+
+  // Populate form when orderData is available (for editing)
+  useEffect(() => {
+    if (orderToEdit && orderData && !isOrderFetching) {
+      reset({
+        userId: orderData.userId || orderData.user?.id || "",
+        restaurantId: orderData.restaurantId || orderData.restaurant?.id || "",
+        deliveryType: orderData.deliveryType,
+        paymentMethod: orderData.paymentMethod || "cod",
+        paymentStatus: orderData.paymentStatus || "pending",
+        status: orderData.status,
+        note: orderData.specialInstructions || "",
+        items:
+          orderData.items?.map((item: any) => ({
+            menuItemId: item.menuItemId || item.menuItem?.id,
+            quantity: Number(item.quantity),
+          })) || [],
+      });
+    }
+  }, [orderToEdit, orderData, isOrderFetching, reset]);
 
   const onSubmit = async (data: OrderFormData) => {
     try {

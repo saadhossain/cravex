@@ -14,7 +14,7 @@ import DashboardSkeletonLoader from "@/components/loader/dashboard-skeleton-load
 import {
   useGetDashboardStatsQuery,
   useGetTopSellingDishesQuery,
-} from "@/store/api/adminApi";
+} from "@/store/api/dashboardApi";
 import {
   DollarSign,
   Package,

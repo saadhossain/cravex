@@ -37,6 +37,18 @@ async function seed() {
     // ===================================
     console.log('👥 Creating users...');
 
+    // Create superadmin user
+    const superadmin = userRepository.create({
+      email: 'admin@cravex.com',
+      password: hashedPassword,
+      firstName: 'Super',
+      lastName: 'Admin',
+      phone: '+44 20 7000 0000',
+      role: 'superadmin',
+      isActive: true,
+      isEmailVerified: true,
+    });
+
     // Create restaurant owners
     const owner1 = userRepository.create({
       email: 'owner1@pizzaparadise.com',
@@ -128,6 +140,7 @@ async function seed() {
     });
 
     await userRepository.save([
+      superadmin,
       owner1,
       owner2,
       owner3,

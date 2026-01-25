@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Restaurant, User } from '../../domain/entities';
 import { AuthModule } from '../auth/auth.module';
 import { RestaurantController } from './restaurant.controller';
+import { RestaurantService } from './restaurant.service';
 
 import {
   CreateRestaurantHandler,
@@ -33,7 +34,7 @@ export const QueryHandlers = [
     AuthModule,
   ],
   controllers: [RestaurantController],
-  providers: [...CommandHandlers, ...QueryHandlers],
-  exports: [],
+  providers: [RestaurantService, ...CommandHandlers, ...QueryHandlers],
+  exports: [RestaurantService],
 })
 export class RestaurantModule {}

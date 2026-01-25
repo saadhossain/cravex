@@ -1,68 +1,6 @@
 import { apiSlice } from "./apiSlice";
 
-// Time period type
-export type TimePeriod = "daily" | "weekly" | "monthly";
-
-// Dashboard types
-export interface OrdersByStatus {
-  pending: number;
-  confirmed: number;
-  preparing: number;
-  ready: number;
-  out_for_delivery: number;
-  delivered: number;
-  cancelled: number;
-}
-
-export interface RevenueByDay {
-  date: string;
-  revenue: number;
-  orders: number;
-}
-
-export interface RecentOrder {
-  id: string;
-  orderNumber: string;
-  status: string;
-  total: number;
-  restaurantName: string;
-  customerName: string;
-  deliveryType: string;
-  createdAt: string;
-  image?: string;
-  title?: string;
-}
-
-export interface DashboardStats {
-  totalOrders: number;
-  totalRevenue: number;
-  totalRestaurants: number;
-  totalCustomers: number;
-  pendingOrders: number;
-  averageOrderValue: number;
-  ordersByStatus: OrdersByStatus;
-  revenueByDay: RevenueByDay[];
-  recentOrders: RecentOrder[];
-}
-
-export interface TopSellingDish {
-  id: string;
-  name: string;
-  image?: string;
-  price: number;
-  orderCount: number;
-  orderRate: number;
-  isPositive: boolean;
-}
-
-export interface TopSellingDishesResponse {
-  dishes: TopSellingDish[];
-  overallRate: {
-    value: number;
-    isPositive: boolean;
-  };
-}
-
+// Order types
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -109,10 +47,7 @@ export interface RestaurantOption {
   name: string;
 }
 
-export interface PeriodQuery {
-  period?: TimePeriod;
-}
-
+// Restaurant types
 export interface AdminRestaurantsQuery {
   page?: number;
   limit?: number;
@@ -126,14 +61,16 @@ export interface AdminRestaurant {
   id: string;
   name: string;
   description?: string;
-  address?: string; // or Address object depending on entity
+  address?: string;
   phone?: string;
   email?: string;
   isActive: boolean;
   rating?: number;
   logoUrl?: string;
   createdAt: string;
-  // Add other fields as needed
+  minimumDelivery?: number;
+  deliveryFee?: number;
+  deliveryTimeMinutes?: number;
   owner?: {
     id: string;
     firstName: string;
@@ -152,6 +89,7 @@ export interface AdminRestaurantsResponse {
   };
 }
 
+// Dish types
 export interface AdminDishesQuery {
   page?: number;
   limit?: number;
@@ -191,6 +129,7 @@ export interface AdminDishesResponse {
   };
 }
 
+// User types
 export interface AdminUsersQuery {
   page?: number;
   limit?: number;
@@ -221,6 +160,7 @@ export interface AdminUsersResponse {
   };
 }
 
+// Coupon types
 export interface AdminCouponsQuery {
   page?: number;
   limit?: number;
@@ -273,6 +213,7 @@ export interface AdminCouponsResponse {
   };
 }
 
+// Order payload types
 export interface CreateAdminOrderPayload {
   userId: string;
   restaurantId: string;
@@ -285,6 +226,7 @@ export interface CreateAdminOrderPayload {
   status?: string;
 }
 
+// Restaurant payload types
 export interface CreateRestaurantPayload {
   name: string;
   address: string;
@@ -309,38 +251,41 @@ export interface CreateRestaurantPayload {
 
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getDashboardStats: builder.query<DashboardStats, PeriodQuery | void>({
-      query: (args) => ({
-        url: "/admin/dashboard/stats",
-        params: args || {},
-      }),
-    }),
-    getTopSellingDishes: builder.query<
-      TopSellingDishesResponse,
-      PeriodQuery | void
-    >({
-      query: (args) => ({
-        url: "/admin/dashboard/top-selling-dishes",
-        params: args || {},
-      }),
-    }),
+    // Orders
     getAdminOrders: builder.query<AdminOrdersResponse, AdminOrdersQuery>({
       query: (params) => ({
-        url: "/admin/orders",
+        url: "/orders/admin/all",
         params,
       }),
       providesTags: ["Order"],
     }),
     createAdminOrder: builder.mutation<void, CreateAdminOrderPayload>({
       query: (body) => ({
-        url: "/admin/orders",
+        url: "/orders/admin",
         method: "POST",
         body,
       }),
       invalidatesTags: ["Order", "User", "Restaurant"],
     }),
+    getOrder: builder.query<any, string>({
+      query: (id) => `/orders/admin/${id}`,
+      providesTags: (result, error, id) => [{ type: "Order", id }],
+    }),
+    updateOrder: builder.mutation<
+      void,
+      { id: string; data: Partial<CreateAdminOrderPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/orders/admin/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Order", "User", "Restaurant"],
+    }),
+
+    // Restaurants
     getRestaurantsForFilter: builder.query<RestaurantOption[], void>({
-      query: () => "/admin/restaurants/list",
+      query: () => "/restaurants/admin/list",
       providesTags: ["Restaurant"],
     }),
     getRestaurants: builder.query<
@@ -348,29 +293,51 @@ export const adminApi = apiSlice.injectEndpoints({
       AdminRestaurantsQuery
     >({
       query: (params) => ({
-        url: "/admin/restaurants",
+        url: "/restaurants/admin/all",
         params,
       }),
       providesTags: ["Restaurant"],
     }),
     createRestaurant: builder.mutation<void, CreateRestaurantPayload>({
       query: (body) => ({
-        url: "/admin/restaurants",
+        url: "/restaurants/admin",
         method: "POST",
         body,
       }),
       invalidatesTags: ["Restaurant"],
     }),
+    updateRestaurant: builder.mutation<
+      void,
+      { id: string; data: Partial<CreateRestaurantPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/restaurants/admin/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Restaurant"],
+    }),
+    deleteRestaurant: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/restaurants/admin/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Restaurant"],
+    }),
+
+    // Dishes
     getDishes: builder.query<AdminDishesResponse, AdminDishesQuery>({
       query: (params) => ({
-        url: "/admin/dishes",
+        url: "/menu/admin/dishes",
         params,
       }),
-      providesTags: ["Menu"], // Assuming Menu tag exists or should be added
+      providesTags: ["Menu"],
     }),
+
+    // Users
     getUsers: builder.query<AdminUsersResponse, AdminUsersQuery>({
       query: (params) => ({
-        url: "/admin/users",
+        url: "/users/admin/all",
         params,
       }),
       providesTags: ["User"],
@@ -378,23 +345,25 @@ export const adminApi = apiSlice.injectEndpoints({
     updateUserStatus: builder.mutation<void, { id: string; isActive: boolean }>(
       {
         query: ({ id, isActive }) => ({
-          url: `/admin/users/${id}/status`,
+          url: `/users/admin/${id}/status`,
           method: "PATCH",
           body: { isActive },
         }),
         invalidatesTags: ["User", "Restaurant"],
       },
     ),
+
+    // Coupons
     getCoupons: builder.query<AdminCouponsResponse, AdminCouponsQuery>({
       query: (params) => ({
-        url: "/admin/coupons",
+        url: "/coupons/admin/all",
         params,
       }),
       providesTags: ["Coupon"],
     }),
     createCoupon: builder.mutation<void, CreateCouponPayload>({
       query: (body) => ({
-        url: "/admin/coupons",
+        url: "/coupons/admin",
         method: "POST",
         body,
       }),
@@ -405,7 +374,7 @@ export const adminApi = apiSlice.injectEndpoints({
       { id: string; data: CreateCouponPayload }
     >({
       query: ({ id, data }) => ({
-        url: `/admin/coupons/${id}`,
+        url: `/coupons/admin/${id}`,
         method: "PATCH",
         body: data,
       }),
@@ -413,50 +382,15 @@ export const adminApi = apiSlice.injectEndpoints({
     }),
     deleteCoupon: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/admin/coupons/${id}`,
+        url: `/coupons/admin/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Coupon"],
-    }),
-    getOrder: builder.query<any, string>({
-      query: (id) => `/admin/orders/${id}`,
-      providesTags: (result, error, id) => [{ type: "Order", id }],
-    }),
-    updateOrder: builder.mutation<
-      void,
-      { id: string; data: Partial<CreateAdminOrderPayload> }
-    >({
-      query: ({ id, data }) => ({
-        url: `/admin/orders/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["Order", "User", "Restaurant"],
-    }),
-    updateRestaurant: builder.mutation<
-      void,
-      { id: string; data: Partial<CreateRestaurantPayload> }
-    >({
-      query: ({ id, data }) => ({
-        url: `/admin/restaurants/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["Restaurant"],
-    }),
-    deleteRestaurant: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `/admin/restaurants/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Restaurant"],
     }),
   }),
 });
 
 export const {
-  useGetDashboardStatsQuery,
-  useGetTopSellingDishesQuery,
   useGetAdminOrdersQuery,
   useGetRestaurantsForFilterQuery,
   useGetRestaurantsQuery,

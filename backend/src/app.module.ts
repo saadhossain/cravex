@@ -4,12 +4,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { appConfig, databaseConfig, jwtConfig } from './config';
-import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
+import { CouponModule } from './modules/coupon/coupon.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { OrderModule } from './modules/order/order.module';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -29,7 +31,9 @@ import { RestaurantModule } from './modules/restaurant/restaurant.module';
     MenuModule,
     CartModule,
     OrderModule,
-    AdminModule,
+    DashboardModule,
+    UserModule,
+    CouponModule,
   ],
   controllers: [AppController],
   providers: [AppService],

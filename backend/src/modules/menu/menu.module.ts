@@ -10,6 +10,7 @@ import {
 } from '../../domain/entities';
 import { AuthModule } from '../auth/auth.module';
 import { MenuController } from './menu.controller';
+import { MenuService } from './menu.service';
 
 import {
   CreateCategoryHandler,
@@ -34,6 +35,6 @@ export const QueryHandlers = [GetMenuByRestaurantHandler];
     AuthModule,
   ],
   controllers: [MenuController],
-  providers: [...CommandHandlers, ...QueryHandlers],
+  providers: [MenuService, ...CommandHandlers, ...QueryHandlers],
 })
 export class MenuModule {}
