@@ -34,7 +34,7 @@ export class Restaurant extends Auditable {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   logoUrl: string;
 
   @Column({ nullable: true })

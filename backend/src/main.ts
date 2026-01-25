@@ -25,6 +25,11 @@ async function bootstrap() {
     }),
   );
 
+  // Increase body limit for image uploads
+  const bodyParser = require('body-parser');
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
   app.enableCors({
     origin: [
       'http://localhost:3001',

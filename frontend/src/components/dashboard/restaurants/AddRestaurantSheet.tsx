@@ -23,6 +23,7 @@ import {
 } from "@/store/api/adminApi";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -63,6 +64,19 @@ export function AddRestaurantSheet({
   });
 
   const [isNewOwner, setIsNewOwner] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processFile = (file: File) => {
+    if (file.size > 1024 * 1024) {
+      toast.error("File size must be less than 1MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setValue("logoUrl", reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
   const {
     register,
     handleSubmit,
@@ -155,12 +169,74 @@ export function AddRestaurantSheet({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="logoUrl">Logo URL</Label>
-              <Input
-                id="logoUrl"
-                placeholder="https://..."
-                {...register("logoUrl")}
+              <Label>Restaurant Logo</Label>
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  isDragging
+                    ? "border-primary bg-primary/10"
+                    : "border-muted-foreground/25 hover:border-primary"
+                }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) processFile(file);
+                }}
+                onClick={() =>
+                  document.getElementById("logo-upload-input")?.click()
+                }
+              >
+                {watch("logoUrl") ? (
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden">
+                    <img
+                      src={watch("logoUrl")}
+                      alt="Logo preview"
+                      className="w-full h-full object-contain"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setValue("logoUrl", undefined);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                    <p className="text-sm font-medium text-foreground">
+                      Click or drag image to upload
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Max size 1MB
+                    </p>
+                  </>
+                )}
+              </div>
+              <input
+                id="logo-upload-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) processFile(file);
+                }}
               />
+              <input type="hidden" {...register("logoUrl")} />
             </div>
 
             <div className="space-y-2 border p-4 rounded-md">
@@ -339,8 +415,17 @@ export function AddRestaurantSheet({
                 <Input id="phone" {...register("phone")} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...register("email")} />
+                <Label htmlFor="email">
+                  Email <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...register("email", { required: "Email is required" })}
+                />
+                {Object.keys(errors).length > 0 && errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
               </div>
             </div>
 
