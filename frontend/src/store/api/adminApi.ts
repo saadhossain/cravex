@@ -108,12 +108,23 @@ export interface AdminDish {
   price: number;
   imageUrl?: string;
   isAvailable: boolean;
+  isPopular?: boolean;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+  isSpicy?: boolean;
+  spicyLevel?: number;
+  calories?: number;
+  preparationTime?: number;
+  allergens?: string[];
+  tags?: string[];
+  displayOrder?: number;
   restaurantId: string;
   restaurant?: {
     name: string;
   };
   categoryId?: string;
   category?: {
+    id: string;
     name: string;
   };
   createdAt: string;
@@ -127,6 +138,31 @@ export interface AdminDishesResponse {
     limit: number;
     totalPages: number;
   };
+}
+
+export interface CreateDishPayload {
+  name: string;
+  description?: string;
+  price: number;
+  categoryId: string;
+  imageUrl?: string;
+  isAvailable?: boolean;
+  isPopular?: boolean;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+  isSpicy?: boolean;
+  spicyLevel?: number;
+  calories?: number;
+  preparationTime?: number;
+  allergens?: string[];
+  tags?: string[];
+  displayOrder?: number;
+}
+
+export interface CategoryOption {
+  id: string;
+  name: string;
+  description?: string;
 }
 
 // User types
@@ -333,6 +369,40 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["Menu"],
     }),
+    getDish: builder.query<AdminDish, string>({
+      query: (id) => `/menu/admin/dishes/${id}`,
+      providesTags: (result, error, id) => [{ type: "Menu", id }],
+    }),
+    createDish: builder.mutation<AdminDish, CreateDishPayload>({
+      query: (body) => ({
+        url: "/menu/admin/dishes",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    updateDish: builder.mutation<
+      AdminDish,
+      { id: string; data: Partial<CreateDishPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/menu/admin/dishes/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    deleteDish: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/menu/admin/dishes/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    getCategoriesForRestaurant: builder.query<CategoryOption[], string>({
+      query: (restaurantId) => `/menu/admin/categories/${restaurantId}`,
+      providesTags: ["Menu"],
+    }),
 
     // Users
     getUsers: builder.query<AdminUsersResponse, AdminUsersQuery>({
@@ -395,6 +465,11 @@ export const {
   useGetRestaurantsForFilterQuery,
   useGetRestaurantsQuery,
   useGetDishesQuery,
+  useGetDishQuery,
+  useCreateDishMutation,
+  useUpdateDishMutation,
+  useDeleteDishMutation,
+  useGetCategoriesForRestaurantQuery,
   useGetUsersQuery,
   useUpdateUserStatusMutation,
   useGetCouponsQuery,

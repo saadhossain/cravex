@@ -5,15 +5,30 @@ import {
   DataTable,
   SingleSelectFilter,
 } from "@/components/dashboard";
+import { AddDishSheet } from "@/components/dashboard/dishes/AddDishSheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
+  useDeleteDishMutation,
   useGetDishesQuery,
   useGetRestaurantsForFilterQuery,
 } from "@/store/api/adminApi";
+import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { format } from "date-fns";
 import { ArrowUpDown, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface AdminDish {
   id: string;
@@ -46,6 +61,14 @@ export default function DishesPage() {
     undefined,
   );
 
+  // Sheet states
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [dishToEdit, setDishToEdit] = useState<string | null>(null);
+
+  // Delete states
+  const [dishToDelete, setDishToDelete] = useState<AdminDish | null>(null);
+  const [deleteDish, { isLoading: isDeleting }] = useDeleteDishMutation();
+
   const { data: restaurantsData } = useGetRestaurantsForFilterQuery();
   const restaurantsOptions = [
     { value: "all", label: "All Restaurants" },
@@ -71,8 +94,6 @@ export default function DishesPage() {
     console.error("Error fetching dishes:", error);
   }
 
-  console.log("Dishes data:", data);
-
   const handleSort = (field: string, direction: "asc" | "desc" | null) => {
     if (!direction) {
       setSortBy(undefined);
@@ -84,9 +105,26 @@ export default function DishesPage() {
     setPage(1);
   };
 
+  const handleEdit = (dish: AdminDish) => {
+    setDishToEdit(dish.id);
+    setIsAddSheetOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!dishToDelete) return;
+
+    try {
+      await deleteDish(dishToDelete.id).unwrap();
+      toast.success("Dish deleted successfully");
+      setDishToDelete(null);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete dish");
+    }
+  };
+
   const columns: ColumnDef<AdminDish>[] = [
     {
-      header: "Dish Idea",
+      header: "Dish",
       cell: (dish) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
@@ -187,6 +225,31 @@ export default function DishesPage() {
         </span>
       ),
     },
+    {
+      header: "Actions",
+      cell: (dish) => (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+            onClick={() => handleEdit(dish)}
+            title="Edit dish"
+          >
+            <FontAwesomeIcon icon={faPen} className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+            onClick={() => setDishToDelete(dish)}
+            title="Delete dish"
+          >
+            <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -226,7 +289,7 @@ export default function DishesPage() {
           />
         </div>
         <div className="flex items-center gap-4">
-          <Button>
+          <Button onClick={() => setIsAddSheetOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Dish
           </Button>
@@ -247,6 +310,44 @@ export default function DishesPage() {
         }}
         filters={null}
       />
+
+      {/* Add/Edit Dish Sheet */}
+      <AddDishSheet
+        open={isAddSheetOpen}
+        onOpenChange={(open) => {
+          setIsAddSheetOpen(open);
+          if (!open) {
+            setDishToEdit(null);
+          }
+        }}
+        dishToEdit={dishToEdit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!dishToDelete}
+        onOpenChange={(open) => !open && setDishToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Dish</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{dishToDelete?.name}"? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-500 hover:bg-red-600"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

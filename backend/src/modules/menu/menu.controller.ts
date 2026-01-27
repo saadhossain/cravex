@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -16,8 +18,10 @@ import { CreateCategoryCommand, CreateMenuItemCommand } from './commands';
 import {
   AdminDishesQueryDto,
   CategoryWithItemsDto,
+  CreateAdminDishDto,
   CreateCategoryDto,
   CreateMenuItemDto,
+  UpdateAdminDishDto,
 } from './dto';
 import { MenuService } from './menu.service';
 import { GetMenuByRestaurantQuery } from './queries';
@@ -74,5 +78,55 @@ export class MenuController {
   @ApiOperation({ summary: 'Get all dishes with filtering (admin)' })
   async getDishesAdmin(@Query() query: AdminDishesQueryDto) {
     return this.menuService.getDishesAdmin(query);
+  }
+
+  @Get('admin/dishes/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get a dish by ID (admin)' })
+  async getDishById(@Param('id') id: string) {
+    return this.menuService.getDishById(id);
+  }
+
+  @Post('admin/dishes')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a dish (admin)' })
+  async createDishAdmin(@Body() dto: CreateAdminDishDto) {
+    return this.menuService.createDishAdmin(dto);
+  }
+
+  @Patch('admin/dishes/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a dish (admin)' })
+  async updateDishAdmin(
+    @Param('id') id: string,
+    @Body() dto: UpdateAdminDishDto,
+  ) {
+    return this.menuService.updateDishAdmin(id, dto);
+  }
+
+  @Delete('admin/dishes/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a dish (admin)' })
+  async deleteDishAdmin(@Param('id') id: string) {
+    return this.menuService.deleteDishAdmin(id);
+  }
+
+  @Get('admin/categories/:restaurantId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get categories for a restaurant (admin)' })
+  async getCategoriesForRestaurant(
+    @Param('restaurantId') restaurantId: string,
+  ) {
+    return this.menuService.getCategoriesForRestaurant(restaurantId);
   }
 }
