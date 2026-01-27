@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '../../domain/entities/category.entity';
 import { MenuItem } from '../../domain/entities/menu-item.entity';
+import { Restaurant } from '../../domain/entities/restaurant.entity';
 import {
+  AdminCategoriesQueryDto,
   AdminDishesQueryDto,
+  CreateAdminCategoryDto,
   CreateAdminDishDto,
+  UpdateAdminCategoryDto,
   UpdateAdminDishDto,
 } from './dto';
 
@@ -16,7 +24,186 @@ export class MenuService {
     private readonly menuItemRepository: Repository<MenuItem>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Restaurant)
+    private readonly restaurantRepository: Repository<Restaurant>,
   ) {}
+
+  // ============ Category Admin Methods ============
+
+  async getCategoriesAdmin(query: AdminCategoriesQueryDto) {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      restaurantId,
+      isActive,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const queryBuilder = this.categoryRepository
+      .createQueryBuilder('category')
+      .leftJoinAndSelect('category.restaurant', 'restaurant');
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(category.name ILIKE :search OR category.description ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (restaurantId) {
+      queryBuilder.andWhere('category.restaurantId = :restaurantId', {
+        restaurantId,
+      });
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('category.isActive = :isActive', { isActive });
+    }
+
+    const validSortFields = ['createdAt', 'name', 'displayOrder'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    queryBuilder.orderBy(`category.${sortField}`, sortOrder);
+
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const [categories, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: categories,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getCategoryById(id: string) {
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['restaurant'],
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+
+    // Ensure restaurantId is always present in the response
+    return {
+      ...category,
+      restaurantId: category.restaurantId || category.restaurant?.id,
+    };
+  }
+
+  async createCategoryAdmin(dto: CreateAdminCategoryDto) {
+    // Verify restaurant exists
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id: dto.restaurantId },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(
+        `Restaurant with ID ${dto.restaurantId} not found`,
+      );
+    }
+
+    // Generate slug from name
+    const baseSlug = dto.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    // Check for slug uniqueness and append suffix if needed
+    let slug = baseSlug;
+    let suffix = 1;
+    while (await this.categoryRepository.findOne({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix}`;
+      suffix++;
+    }
+
+    const category = this.categoryRepository.create({
+      name: dto.name,
+      slug,
+      description: dto.description,
+      imageUrl: dto.imageUrl,
+      displayOrder: dto.displayOrder ?? 0,
+      isActive: dto.isActive ?? true,
+      restaurantId: dto.restaurantId,
+    });
+
+    const savedCategory = await this.categoryRepository.save(category);
+
+    return this.getCategoryById(savedCategory.id);
+  }
+
+  async updateCategoryAdmin(id: string, dto: UpdateAdminCategoryDto) {
+    const existingCategory = await this.categoryRepository.findOne({
+      where: { id },
+    });
+
+    if (!existingCategory) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+
+    // If name is changing, update the slug
+    let slug = existingCategory.slug;
+    if (dto.name && dto.name !== existingCategory.name) {
+      const baseSlug = dto.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      slug = baseSlug;
+      let suffix = 1;
+      while (true) {
+        const existing = await this.categoryRepository.findOne({
+          where: { slug },
+        });
+        if (!existing || existing.id === id) break;
+        slug = `${baseSlug}-${suffix}`;
+        suffix++;
+      }
+    }
+
+    await this.categoryRepository.update(id, {
+      name: dto.name,
+      slug: dto.name ? slug : undefined,
+      description: dto.description,
+      imageUrl: dto.imageUrl,
+      displayOrder: dto.displayOrder,
+      isActive: dto.isActive,
+    });
+
+    return this.getCategoryById(id);
+  }
+
+  async deleteCategoryAdmin(id: string) {
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['menuItems'],
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+
+    // Check if category has menu items
+    if (category.menuItems && category.menuItems.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete category with ${category.menuItems.length} menu items. Remove all items first.`,
+      );
+    }
+
+    await this.categoryRepository.remove(category);
+
+    return { message: 'Category deleted successfully' };
+  }
+
+  // ============ Dish Admin Methods ============
 
   async getDishesAdmin(query: AdminDishesQueryDto) {
     const {

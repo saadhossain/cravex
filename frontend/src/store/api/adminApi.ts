@@ -165,6 +165,52 @@ export interface CategoryOption {
   description?: string;
 }
 
+// Category types
+export interface AdminCategoriesQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  restaurantId?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export interface AdminCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+  restaurantId: string;
+  restaurant?: {
+    id?: string;
+    name: string;
+  };
+  createdAt: string;
+}
+
+export interface AdminCategoriesResponse {
+  data: AdminCategory[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface CreateCategoryPayload {
+  name: string;
+  restaurantId: string;
+  description?: string;
+  imageUrl?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
 // User types
 export interface AdminUsersQuery {
   page?: number;
@@ -413,8 +459,50 @@ export const adminApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Menu"],
     }),
     getCategoriesForRestaurant: builder.query<CategoryOption[], string>({
-      query: (restaurantId) => `/menu/admin/categories/${restaurantId}`,
+      query: (restaurantId) =>
+        `/menu/admin/categories/restaurant/${restaurantId}`,
       providesTags: ["Menu"],
+    }),
+
+    // Categories
+    getCategories: builder.query<AdminCategoriesResponse, AdminCategoriesQuery>(
+      {
+        query: (params) => ({
+          url: "/menu/admin/categories",
+          params,
+        }),
+        providesTags: ["Menu"],
+      },
+    ),
+    getCategory: builder.query<AdminCategory, string>({
+      query: (id) => `/menu/admin/categories/${id}`,
+      providesTags: (result, error, id) => [{ type: "Menu", id }],
+    }),
+    createCategory: builder.mutation<AdminCategory, CreateCategoryPayload>({
+      query: (body) => ({
+        url: "/menu/admin/categories",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    updateCategory: builder.mutation<
+      AdminCategory,
+      { id: string; data: Partial<CreateCategoryPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/menu/admin/categories/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    deleteCategory: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/menu/admin/categories/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Menu"],
     }),
 
     // Users
@@ -513,6 +601,11 @@ export const {
   useUpdateDishMutation,
   useDeleteDishMutation,
   useGetCategoriesForRestaurantQuery,
+  useGetCategoriesQuery,
+  useGetCategoryQuery,
+  useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
   useGetUsersQuery,
   useGetUserQuery,
   useCreateUserMutation,

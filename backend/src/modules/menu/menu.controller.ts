@@ -16,11 +16,14 @@ import { CurrentUser, Roles } from '../auth/decorators';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { CreateCategoryCommand, CreateMenuItemCommand } from './commands';
 import {
+  AdminCategoriesQueryDto,
   AdminDishesQueryDto,
   CategoryWithItemsDto,
+  CreateAdminCategoryDto,
   CreateAdminDishDto,
   CreateCategoryDto,
   CreateMenuItemDto,
+  UpdateAdminCategoryDto,
   UpdateAdminDishDto,
 } from './dto';
 import { MenuService } from './menu.service';
@@ -69,7 +72,68 @@ export class MenuController {
     return this.queryBus.execute(new GetMenuByRestaurantQuery(restaurantId));
   }
 
-  // ============ Admin/Superadmin Endpoints ============
+  // ============ Admin/Superadmin Category Endpoints ============
+
+  @Get('admin/categories')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all categories with filtering (admin)' })
+  async getCategoriesAdmin(@Query() query: AdminCategoriesQueryDto) {
+    return this.menuService.getCategoriesAdmin(query);
+  }
+
+  @Get('admin/categories/restaurant/:restaurantId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get categories for a restaurant (admin)' })
+  async getCategoriesForRestaurant(
+    @Param('restaurantId') restaurantId: string,
+  ) {
+    return this.menuService.getCategoriesForRestaurant(restaurantId);
+  }
+
+  @Get('admin/categories/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get a category by ID (admin)' })
+  async getCategoryById(@Param('id') id: string) {
+    return this.menuService.getCategoryById(id);
+  }
+
+  @Post('admin/categories')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a category (admin)' })
+  async createCategoryAdmin(@Body() dto: CreateAdminCategoryDto) {
+    return this.menuService.createCategoryAdmin(dto);
+  }
+
+  @Patch('admin/categories/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a category (admin)' })
+  async updateCategoryAdmin(
+    @Param('id') id: string,
+    @Body() dto: UpdateAdminCategoryDto,
+  ) {
+    return this.menuService.updateCategoryAdmin(id, dto);
+  }
+
+  @Delete('admin/categories/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a category (admin)' })
+  async deleteCategoryAdmin(@Param('id') id: string) {
+    return this.menuService.deleteCategoryAdmin(id);
+  }
+
+  // ============ Admin/Superadmin Dish Endpoints ============
 
   @Get('admin/dishes')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -117,16 +181,5 @@ export class MenuController {
   @ApiOperation({ summary: 'Delete a dish (admin)' })
   async deleteDishAdmin(@Param('id') id: string) {
     return this.menuService.deleteDishAdmin(id);
-  }
-
-  @Get('admin/categories/:restaurantId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get categories for a restaurant (admin)' })
-  async getCategoriesForRestaurant(
-    @Param('restaurantId') restaurantId: string,
-  ) {
-    return this.menuService.getCategoriesForRestaurant(restaurantId);
   }
 }

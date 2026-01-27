@@ -1,5 +1,6 @@
 export { DataTable } from "../common/DataTable";
 export type { ColumnDef, DataTableProps } from "../common/DataTable";
+export { AddCategorySheet } from "./categories/AddCategorySheet";
 export * from "./DashboardFilters";
 export * from "./Filters";
 export { OrderStatusChart } from "./OrderStatusChart";

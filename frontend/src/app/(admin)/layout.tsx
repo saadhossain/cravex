@@ -13,6 +13,7 @@ const navItems = [
   { label: "Orders", href: "/dashboard/orders", icon: "📦" },
   { label: "Restaurants", href: "/dashboard/restaurants", icon: "🍽️" },
   { label: "Dishes", href: "/dashboard/dishes", icon: "🍔" },
+  { label: "Categories", href: "/dashboard/categories", icon: "📑" },
   { label: "Users", href: "/dashboard/users", icon: "👥" },
   { label: "Coupons", href: "/dashboard/coupons", icon: "🎟️" },
 ];
@@ -159,7 +160,7 @@ export default function AdminLayout({
                 isCollapsed && "lg:hidden",
               )}
             >
-              Back to Home
+              Home
             </span>
           </Link>
         </div>
