@@ -11,3 +11,4 @@ export type { TimePeriod } from "./StatsCard";
 export { StatsCardCarousel, StatsCardSlide } from "./StatsCardCarousel";
 export { TopSellingDishes } from "./TopSellingDishes";
 export type { TopDish } from "./TopSellingDishes";
+export { AddUserSheet } from "./users/AddUserSheet";

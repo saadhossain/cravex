@@ -181,6 +181,8 @@ export interface AdminUser {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
+  avatarUrl?: string;
   role: "restaurant" | "customer" | "superadmin";
   isActive: boolean;
   createdAt: string;
@@ -194,6 +196,17 @@ export interface AdminUsersResponse {
     limit: number;
     totalPages: number;
   };
+}
+
+export interface CreateUserPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  avatarUrl?: string;
+  role: "restaurant" | "customer";
+  isActive?: boolean;
 }
 
 // Coupon types
@@ -412,6 +425,36 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+    getUser: builder.query<AdminUser, string>({
+      query: (id) => `/users/admin/${id}`,
+      providesTags: (result, error, id) => [{ type: "User", id }],
+    }),
+    createUser: builder.mutation<AdminUser, CreateUserPayload>({
+      query: (body) => ({
+        url: "/users/admin",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User"],
+    }),
+    updateUser: builder.mutation<
+      AdminUser,
+      { id: string; data: Partial<CreateUserPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/users/admin/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+    deleteUser: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/users/admin/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
+    }),
     updateUserStatus: builder.mutation<void, { id: string; isActive: boolean }>(
       {
         query: ({ id, isActive }) => ({
@@ -471,6 +514,10 @@ export const {
   useDeleteDishMutation,
   useGetCategoriesForRestaurantQuery,
   useGetUsersQuery,
+  useGetUserQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
   useUpdateUserStatusMutation,
   useGetCouponsQuery,
   useCreateCouponMutation,

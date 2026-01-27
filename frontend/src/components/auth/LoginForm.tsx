@@ -51,7 +51,6 @@ export function LoginForm() {
       }
     } catch (err) {
       console.error("Failed to login:", err);
-      // Handle error display here
     }
   };
 
