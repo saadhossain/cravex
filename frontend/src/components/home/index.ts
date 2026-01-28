@@ -1,0 +1,11 @@
+export { default as AboutSection } from "./AboutSection";
+export { default as AppPromoSection } from "./AppPromoSection";
+export { default as ExclusiveDeals } from "./ExclusiveDeals";
+export { default as Footer } from "./Footer";
+export { default as Header } from "./Header";
+export { default as HeroSection } from "./HeroSection";
+export { default as NewsletterSection } from "./NewsletterSection";
+export { default as PartnerSection } from "./PartnerSection";
+export { default as PopularCategories } from "./PopularCategories";
+export { default as PopularRestaurants } from "./PopularRestaurants";
+export { default as TestimonialsSection } from "./TestimonialsSection";
