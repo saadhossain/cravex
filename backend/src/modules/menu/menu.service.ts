@@ -437,6 +437,12 @@ export class MenuService {
             rating: Number(dish.category.restaurant.rating),
           }
         : null,
+      category: dish.category
+        ? {
+            id: dish.category.id,
+            name: dish.category.name,
+          }
+        : null,
     }));
   }
 
