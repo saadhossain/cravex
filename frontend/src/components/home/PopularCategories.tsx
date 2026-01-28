@@ -53,7 +53,12 @@ const PopularCategories = () => {
   const { data: categories, isLoading, error } = useGetPublicCategoriesQuery(8);
 
   const displayCategories =
-    categories && categories.length > 0 ? categories : fallbackCategories;
+    categories && categories.length > 0
+      ? categories.filter(
+          (cat, index, self) =>
+            index === self.findIndex((c) => c.name === cat.name),
+        )
+      : fallbackCategories;
 
   return (
     <section className="py-16 px-4 lg:px-8 bg-gray-50">

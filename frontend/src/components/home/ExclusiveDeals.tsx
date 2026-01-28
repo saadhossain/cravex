@@ -20,6 +20,7 @@ const fallbackDeals: PublicDish[] = [
     imageUrl: "/images/home/fried-chicken.png",
     preparationTime: 25,
     restaurant: { id: "1", name: "KFC", rating: 4.8 },
+    category: { id: "c1", name: "Chicken" },
   },
   {
     id: "2",
@@ -29,6 +30,7 @@ const fallbackDeals: PublicDish[] = [
     imageUrl: "/images/home/burger.png",
     preparationTime: 20,
     restaurant: { id: "2", name: "Burger King", rating: 4.7 },
+    category: { id: "c2", name: "Burgers" },
   },
   {
     id: "3",
@@ -38,6 +40,7 @@ const fallbackDeals: PublicDish[] = [
     imageUrl: "/images/home/fresh-salad.png",
     preparationTime: 15,
     restaurant: { id: "3", name: "Healthy Bites", rating: 4.9 },
+    category: { id: "c3", name: "Salads" },
   },
   {
     id: "4",
@@ -47,6 +50,7 @@ const fallbackDeals: PublicDish[] = [
     imageUrl: "/images/home/pizza.png",
     preparationTime: 30,
     restaurant: { id: "4", name: "Pizza Hut", rating: 4.8 },
+    category: { id: "c4", name: "Pizza" },
   },
 ];
 
@@ -69,14 +73,25 @@ const ExclusiveDeals = () => {
         );
 
   // Build filter categories from API or use defaults
+  // Build filter categories from API or use defaults
+  const uniqueCategories =
+    categories
+      ?.filter(
+        (cat, index, self) =>
+          index === self.findIndex((c) => c.name === cat.name),
+      )
+      .slice(0, 5) || [];
+
   const filterCategories = [
     { id: "all", name: "All" },
-    ...(categories?.slice(0, 5).map((c) => ({ id: c.slug, name: c.name })) || [
-      { id: "pizza", name: "Pizza" },
-      { id: "burger", name: "Burger" },
-      { id: "chicken", name: "Chicken" },
-      { id: "salads", name: "Salads" },
-    ]),
+    ...(uniqueCategories.length > 0
+      ? uniqueCategories.map((c) => ({ id: c.name, name: c.name }))
+      : [
+          { id: "Pizza", name: "Pizza" },
+          { id: "Burgers", name: "Burgers" },
+          { id: "Chicken", name: "Chicken" },
+          { id: "Salads", name: "Salads" },
+        ]),
   ];
 
   return (
