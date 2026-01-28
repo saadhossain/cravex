@@ -14,6 +14,9 @@ export class MenuItem extends Auditable {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  originalPrice: number; // Original price before discount
+
   @Column({ nullable: true })
   imageUrl: string;
 
