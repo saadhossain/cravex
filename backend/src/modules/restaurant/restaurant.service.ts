@@ -196,4 +196,48 @@ export class RestaurantService {
     }
     return { message: 'Restaurant deleted successfully' };
   }
+
+  // ============ Public Methods for Home Page ============
+
+  async getPopularRestaurants(limit: number = 8) {
+    const restaurants = await this.restaurantRepository.find({
+      where: { isActive: true },
+      order: { rating: 'DESC', reviewCount: 'DESC' },
+      take: limit,
+    });
+
+    return restaurants.map((restaurant) => ({
+      id: restaurant.id,
+      name: restaurant.name,
+      slug: restaurant.slug,
+      logoUrl: restaurant.logoUrl,
+      rating: Number(restaurant.rating),
+      reviewCount: restaurant.reviewCount,
+      deliveryTimeMinutes: restaurant.deliveryTimeMinutes,
+      deliveryFee: Number(restaurant.deliveryFee),
+      cuisineTypes: restaurant.cuisineTypes,
+      isFeatured: restaurant.isFeatured,
+    }));
+  }
+
+  async getFeaturedRestaurants(limit: number = 4) {
+    const restaurants = await this.restaurantRepository.find({
+      where: { isActive: true, isFeatured: true },
+      order: { rating: 'DESC' },
+      take: limit,
+    });
+
+    return restaurants.map((restaurant) => ({
+      id: restaurant.id,
+      name: restaurant.name,
+      slug: restaurant.slug,
+      logoUrl: restaurant.logoUrl,
+      bannerUrl: restaurant.bannerUrl,
+      rating: Number(restaurant.rating),
+      reviewCount: restaurant.reviewCount,
+      deliveryTimeMinutes: restaurant.deliveryTimeMinutes,
+      deliveryFee: Number(restaurant.deliveryFee),
+      cuisineTypes: restaurant.cuisineTypes,
+    }));
+  }
 }

@@ -81,6 +81,20 @@ export class RestaurantController {
     );
   }
 
+  // ============ Public Home Page Endpoints ============
+
+  @Get('public/popular')
+  @ApiOperation({ summary: 'Get popular restaurants for home page' })
+  async getPopularRestaurants(@Query('limit') limit?: number) {
+    return this.restaurantService.getPopularRestaurants(limit || 8);
+  }
+
+  @Get('public/featured')
+  @ApiOperation({ summary: 'Get featured restaurants for home page' })
+  async getFeaturedRestaurants(@Query('limit') limit?: number) {
+    return this.restaurantService.getFeaturedRestaurants(limit || 4);
+  }
+
   // ============ Admin/Superadmin Endpoints ============
 
   @Get('admin/list')

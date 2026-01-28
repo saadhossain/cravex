@@ -72,6 +72,26 @@ export class MenuController {
     return this.queryBus.execute(new GetMenuByRestaurantQuery(restaurantId));
   }
 
+  // ============ Public Home Page Endpoints ============
+
+  @Get('public/categories')
+  @ApiOperation({ summary: 'Get categories for home page' })
+  async getPublicCategories(@Query('limit') limit?: number) {
+    return this.menuService.getPublicCategories(limit || 8);
+  }
+
+  @Get('public/featured-dishes')
+  @ApiOperation({ summary: 'Get featured dishes for home page' })
+  async getFeaturedDishes(@Query('limit') limit?: number) {
+    return this.menuService.getFeaturedDishes(limit || 4);
+  }
+
+  @Get('public/popular-dishes')
+  @ApiOperation({ summary: 'Get popular dishes for home page' })
+  async getPopularDishes(@Query('limit') limit?: number) {
+    return this.menuService.getPopularDishes(limit || 8);
+  }
+
   // ============ Admin/Superadmin Category Endpoints ============
 
   @Get('admin/categories')

@@ -397,4 +397,77 @@ export class MenuService {
       description: category.description,
     }));
   }
+
+  // ============ Public Methods for Home Page ============
+
+  async getPublicCategories(limit: number = 8) {
+    const categories = await this.categoryRepository.find({
+      where: { isActive: true },
+      order: { displayOrder: 'ASC', name: 'ASC' },
+      take: limit,
+    });
+
+    return categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      imageUrl: category.imageUrl,
+    }));
+  }
+
+  async getFeaturedDishes(limit: number = 4) {
+    const dishes = await this.menuItemRepository.find({
+      where: { isAvailable: true, isPopular: true },
+      relations: ['category', 'category.restaurant'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+
+    return dishes.map((dish) => ({
+      id: dish.id,
+      name: dish.name,
+      description: dish.description,
+      price: Number(dish.price),
+      imageUrl: dish.imageUrl,
+      preparationTime: dish.preparationTime,
+      restaurant: dish.category?.restaurant
+        ? {
+            id: dish.category.restaurant.id,
+            name: dish.category.restaurant.name,
+            rating: Number(dish.category.restaurant.rating),
+          }
+        : null,
+    }));
+  }
+
+  async getPopularDishes(limit: number = 8) {
+    const dishes = await this.menuItemRepository.find({
+      where: { isAvailable: true },
+      relations: ['category', 'category.restaurant'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+
+    return dishes.map((dish) => ({
+      id: dish.id,
+      name: dish.name,
+      price: Number(dish.price),
+      imageUrl: dish.imageUrl,
+      preparationTime: dish.preparationTime,
+      isPopular: dish.isPopular,
+      category: dish.category
+        ? {
+            id: dish.category.id,
+            name: dish.category.name,
+          }
+        : null,
+      restaurant: dish.category?.restaurant
+        ? {
+            id: dish.category.restaurant.id,
+            name: dish.category.restaurant.name,
+            rating: Number(dish.category.restaurant.rating),
+          }
+        : null,
+    }));
+  }
 }
